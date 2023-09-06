@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
+    <style>
+        
+        .section-1 {
+            background-color: #332D2D;
+            width: 20%;
+            height: 100vh;
+            float: left;
+            color: grey;
+        }
+
+        .section-2 {
+            background-color: #c5cae9;
+            width: 80%;
+            height: 100vh;
+            float: right;
+            
+        }
+
+        .options {
+            text-align: left;
+            padding-top: 20px;
+            padding-left : 20px;
+        }
+
+        .option-link {
+            text-decoration: none;
+            color: grey;
+            font-style: italic;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .navbar {
+            background-color: #FBFBFB;
+            color: black;
+            text-align: right;
+            padding: 10px;
+        }
+        .bs-example {
+            width: 90%;
+            border-radius: 10px;
+            margin: 10px;
+            background-color: white;
+        }
+    
+        .bs-example table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* Fixed layout to cover parent width */
+        }
+    
+        .bs-example th {
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+    
+        .bs-example th,
+        .bs-example td {
+            padding: 10px; /* Add padding to cells */
+            border: 1px solid #ddd; /* Add border for cells */
+            word-wrap: break-word; /* Allow text to wrap within cells */
+        }
+    
+        .bs-example tbody tr:nth-child(even) {
+            background-color: #f2f2f2; /* Alternate row background color */
+        }
+    
+        .bs-example tbody tr:hover {
+            background-color: #ddd; /* Hovered row background color */
+        }
+    
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+    
+        .pagination a {
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        .status-box {
+            display: flex;
+            align-items: center;
+            height: 30px; 
+        }
+    
+        .status-cell {
+            padding: 5px 10px;
+            border-radius: 30px;
+        }
+    
+        .status-green {
+            background-color: green;
+            color: white;
+        }
+    
+        .status-red {
+            background-color: red;
+            color: white;
+        }
+        .status-grey {
+            background-color: grey;
+            color: white;
+        }
+        .action-link{
+            color:green;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="section-1">
+        <div class="options">
+           <h1><I>Velocity</I></h1>
+            <br>
+            
+            <a href="{%url 'home-vendor'%}" class="option-link">
+                &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bank" viewBox="0 0 16 16">
+                    <path d="m8 0 6.61 3h.89a.5.5 0 0 1 .50.50v2a.5.5 0 0 1-.50.50H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.50-.50v-2a.5.5 0 0 1 .50-.50h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
+                </svg>
+                &nbsp;&nbsp;Dashboard</a>
+            <a href="{% url 'vendor'%}" class="option-link">
+                &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-badge-vr" viewBox="0 0 16 16">
+                    <path d="M14 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/>
+                    <path d="M4.508 11h1.429l1.99-5.999H6.61L5.277 9.708H5.22L3.875 5.001H2.5L4.508 11zm6.387-5.999H8.5V11h1.173V8.763h1.064L11.787 11h1.327L11.91 8.583C12.455 8.373 13 7.779 13 6.9c0-1.147-.773-1.9-2.105-1.9zm-1.222 2.87V5.933h1.05c.63 0 1.05.347 1.05.989 0 .633-.408.95-1.067.95H9.673z"/>
+                  </svg>
+                  &nbsp;&nbsp;Vendor</a>
+            <a href="{% url 'rfp-list'%}" class="option-link">
+                &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bookmark-heart" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 4.41c1.387-1.425 4.854 1.07 0 4.277C3.146 5.48 6.613 2.986 8 4.412z"/>
+                    <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
+                  </svg>
+                  &nbsp;&nbsp;RFP List</a>
+            <a href="{%url 'rfp-quotes'%}" class="option-link">
+                &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
+                    <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                    <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+                  </svg>
+                  &nbsp;&nbsp;RFP Quotes</a>
+            <a href="{%url 'category'%}" class="option-link">
+                &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-dash" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M5.5 10a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z"/>
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+              </svg>&nbsp;&nbsp;Categories</a>
+           
+        </div>
+    </div>
+    <div class="section-2">
+        <nav class="navbar navbar-light bg-light">
+            <p>Welcome username</p>
+            &nbsp;<a href = "{%url 'logout'%}">Logout</a>
+          </nav>
+          <div>
+            <h3>Vendors List</h3>
+          </div>
+          <div class="bs-example">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>S.no</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Contact no</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in vendors %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ vendor.first_name }}</td>
+                        <td>{{ vendor.last_name }}</td>
+                        <td>{{ vendor.email }}</td>
+                        <td>{{ vendor.phone_no }}</td>
+                        <td>
+                            <div class="status-box">
+                                <div class="status-cell status-grey">Pending</div> <!-- Set the initial status here -->
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'vendor-approve' vendor.vendor_id %}" class="action-link approve-link" data-status="Approved" ><I>Approve /</I></a>
+                            <a href="{% url 'vendor-reject' vendor.vendor_id %}" class="action-link reject-link" data-status="Rejected"><I>Reject</I></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const actionLinks = document.querySelectorAll(".action-link");
+                    actionLinks.forEach(function (link) {
+                        link.addEventListener("click", function (event) {
+                            event.preventDefault();
+                            const statusCell = this.parentElement.previousElementSibling.querySelector(".status-cell");
+                            const status = this.getAttribute("data-status");
+                            statusCell.textContent = status;
+                            statusCell.className = "status-cell";
+                            statusCell.classList.add(status.toLowerCase() === "approved" ? "status-green" : "status-red");
+                        });
+                    });
+                });
+            </script>
+            
+        </div>
+        <div class="pagination">
+            
+        </div>
+    </div>
+</body>
+</html>

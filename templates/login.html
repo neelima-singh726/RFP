@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container center-card">
+    <div class="card square-card"> <!-- Add square-card class -->
+        <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->
+            <span class="navbar-brand">Welcome to RFP</span>
+        </nav>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <h2>Login</h2>
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Login</button> <!-- Used Bootstrap button class -->
+                <p>Don't have an account? <a href="{% url 'register' %}">Register as admin</a></p>
+                <p>Don't have an account? <a href="{% url 'register-vendor' %}">Register as vendor</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

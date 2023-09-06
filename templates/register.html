@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container center-card">
+    <div class="card square-card"> <!-- Add square-card class -->
+        <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->
+            <span class="navbar-brand">Welcome to RFP</span>
+        </nav>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <h2>Sign Up</h2>
+                {% for field in form %}
+                <p>
+                    {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {{ field.label_tag }} {{ field }}
+                </p>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Register</button> <!-- Used Bootstrap button class -->
+                <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                <p>Register as Vendor <a href="{% url 'register-vendor' %}">Register</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
