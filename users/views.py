@@ -5,14 +5,14 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse_lazy
 from django.views import View
 from rfp_project.settings import EMAIL, PSWD
-from users.forms import LoginForm, RegisterForm, RegisterFormVendor, RfpListForm
+from users.forms import LoginForm, QuotesForm, RegisterForm, RegisterFormVendor, RfpListForm
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import logging
 from django.views.generic.edit import CreateView
 
 
-from users.models import RFPList, Vendor
+from users.models import Category, Quotes, RFPList, Vendor
 
 logger = logging.getLogger(__name__)
 class HomeView(View):
@@ -224,7 +224,8 @@ class RfpQuotesView(View):
         HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
     """
     def get(self, request):
-        return render(request,'rfp_quotes.html')
+        rfps = RFPList.objects.all()
+        return render(request,'rfp_quotes.html',{'rfps':rfps})
     def post(self, request):
         return render(request,'rfp_quotes.html')
 
@@ -252,10 +253,9 @@ class CategoryView(View):
         HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
     """
     def get(self, request):
-        pass
-    def post(self, request):
-        pass
-
+        category = Category.objects.all()
+        return render(request,'category.html',{'category':category})
+  
 
 def approve(request, vendor_id):
     try:
@@ -335,18 +335,11 @@ class SendEmailView(View):
 
 
 class RfpForQuotesView(View):
-    """View for user sign up.
-
-    Args:
-        request (HttpRequest): The request object.
-
-    Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
-    """
     def get(self, request):
-        return render(request,'rfp_for_quotes.html')
-    def post(self, request):
-        return render(request,'rfp_for_quotes.html')
+        rfps = RFPList.objects.all()
+        return render(request,'rfp_for_quotes.html',{'rfps':rfps})
+
+    
 
 
 def send_emails(subject, body, sender, recipients, password):
@@ -363,7 +356,7 @@ def send_emails(subject, body, sender, recipients, password):
 
 class CreateRfpView(CreateView):
     model = RFPList
-    fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','vendors']  
+    fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','category'] 
     success_url = reverse_lazy('rfp-list')  # Redirect to rfp-list URL after successful form submission
 
     def get(self, request, *args, **kwargs):
@@ -373,21 +366,69 @@ class CreateRfpView(CreateView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)  
         return response
+    
     def form_valid(self, form):
+        form.instance.created_by_id = self.request.user.id
         # Save the form data and then send the email
         response = super().form_valid(form)
-        
-        selected_vendors = form.cleaned_data['vendors']
         
         # Prepare the email subject and body
         subject = 'New RFP Added'
         body = f"A new RFP titled '{self.object.rfp_title}' has been added. Check it out!"
         
+        # Get the list of user emails (assuming you have a `User` model with an `email` field)
+        user_emails = Vendor.objects.values_list('email', flat=True)
+        
+        # Convert the QuerySet to a list
+        recipients = list(user_emails)
+        
         try:
-            # Send the email to selected vendors
-            for vendor in selected_vendors:
-                send_emails(subject, body, EMAIL, [vendor.email], PSWD)
-            
+            # Send the email
+            send_emails(subject, body,EMAIL, recipients,PSWD)
+            return response
+        except Exception as e:
+            # Handle email sending errors here
+            # You can log the error or take appropriate action
+            return JsonResponse({'success': False, 'error': str(e)})
+        
+class CreateRFpForQuoteView(CreateView):
+    model = Quotes
+    fields = ['vendor_price','item_desc','quantity','total_price'] 
+    success_url = reverse_lazy('rfp-for-quotes')  # Redirect to rfp-list URL after successful form submission
+
+    def get(self, request, *args, **kwargs):
+        # Display the form for GET requests
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)  
+        return response
+    
+    def form_valid(self, form):
+        vendor = self.request.user.vendor
+
+        # Get the rfp_id from the URL
+        rfp_id = self.kwargs['rfp_id']
+
+        # Retrieve the RFPList object based on the rfp_id
+        rfp = RFPList.objects.get(pk=rfp_id)
+
+        # Set the vendor and RFPList objects for the Quotes object
+        form.instance.vendor = vendor
+        form.instance.rfp = rfp
+        form.instance.item_name = rfp.rfp_title
+
+        response = super().form_valid(form)
+
+         # Prepare the email subject and body
+        subject = 'New RFP  Added By Vendor'
+        body = f"A new RFP has been added . Check it out!"
+        
+        created_by_email = rfp.created_by.email
+        
+        try:
+            # Send the email
+            send_emails(subject, body,EMAIL,[created_by_email],PSWD)
             return response
         except Exception as e:
             # Handle email sending errors here

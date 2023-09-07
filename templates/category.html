@@ -41,7 +41,39 @@
             text-align: right;
             padding: 10px;
         }
-    
+       
+        .container {
+            background-color: #f0f0f0; /* Change the background color */
+            padding: 20px; /* Add padding */
+            margin: 20px; /* Add margin */
+        }
+
+        /* Style the heading */
+        h1 {
+            font-size: 24px; /* Increase font size */
+        }
+
+        /* Style the list */
+        ul {
+            list-style-type: none; /* Remove bullet points */
+            padding-left: 0; /* Remove default padding */
+        }
+
+        /* Style each list item with alternate colors */
+        li:nth-child(odd) {
+            background-color:  #e1bee7;
+        }
+
+        li:nth-child(even) {
+            background-color:  #d1c4e9;
+        }
+
+        /* Increase font size for list items */
+        li {
+            font-size: 18px;
+            padding: 10px; /* Add padding to each list item */
+            margin-bottom: 5px; /* Add margin between list items */
+        }
 
     </style>
 </head>
@@ -51,7 +83,7 @@
            <h1><I>Velocity</I></h1>
             <br>
             
-            <a href="{%url 'home'%}" class="option-link">
+            <a href="{%url 'home-admin'%}" class="option-link">
                 &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bank" viewBox="0 0 16 16">
                     <path d="m8 0 6.61 3h.89a.5.5 0 0 1 .50.50v2a.5.5 0 0 1-.50.50H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.50-.50v-2a.5.5 0 0 1 .50-.50h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
                 </svg>
@@ -86,6 +118,14 @@
         <nav class="navbar navbar-light bg-light">
             <p>Welcome username</p>
           </nav>
+          <div class ="container">
+                <h1>Category List</h1>
+                <ul>
+                    {% for cat in category %}
+                    <li>{{ cat.c_name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
     </div>
 </body>
 </html>

@@ -18,6 +18,7 @@ urlpatterns = [
     path('rfp-open/<int:id>/', views.rfpopen, name='rfp-open'),
     path('rfp-close/<int:id>/', views.rfpclose, name='rfp-close'),
     path('create-rfp/', views.CreateRfpView.as_view(), name='create-rfp'),
+    path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote')
 
 
 
