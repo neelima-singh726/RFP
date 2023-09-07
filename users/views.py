@@ -147,10 +147,10 @@ class SignUpView(View):
                 user.is_superuser = True
                 user.is_staff = True
                 user.save()
+                login(request, user)
                 email_sender_view = SendEmailView()
                 response = email_sender_view.send_email(request.user.email)
                 messages.success(request, 'You have signed up successfully.')
-                login(request, user)
                 return redirect('home-admin')
             else:
                 return render(request, 'register.html', {'form': form})
@@ -186,10 +186,10 @@ class SignUpVendorView(View):
                 user = form.save(commit=False)
                 user.username = user.username.lower()
                 user.save()
+                login(request, user)
                 email_sender_view = SendEmailView()
                 response = email_sender_view.send_email(request.user.email)
                 messages.success(request, 'You have signed up successfully.')
-                login(request, user)
                 return redirect('home-vendor')
             else:
                 return render(request, 'registerVendor.html', {'form': form})
@@ -278,7 +278,7 @@ def reject(request, vendor_id):
 def rfpopen(request, id):
     try:
         rfps = RFPList.objects.get(pk=id)
-        rfps.v_status = 'open'
+        rfps.status = 'open'
         rfps.save()
     except RFPList.DoesNotExist:
         raise Http404("RFPLIST does not exist")
@@ -287,7 +287,7 @@ def rfpopen(request, id):
 def rfpclose(request, id):
     try:
         rfps = RFPList.objects.get(pk=id)
-        rfps.v_status = 'close'
+        rfps.status = 'close'
         rfps.save()
     except RFPList.DoesNotExist:
         raise Http404("RFPLIST does not exist")
@@ -347,10 +347,23 @@ class RfpForQuotesView(View):
         return render(request,'rfp_for_quotes.html')
     def post(self, request):
         return render(request,'rfp_for_quotes.html')
-   
+
+
+def send_emails(subject, body, sender, recipients, password):
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+       smtp_server.login(sender, password)
+       smtp_server.sendmail(sender, recipients, msg.as_string())
+    print("Message sent!")
+
+
+
 class CreateRfpView(CreateView):
     model = RFPList
-    fields = ['rfp_title','last_date','min_amount','max_amount'] 
+    fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','vendors']  
     success_url = reverse_lazy('rfp-list')  # Redirect to rfp-list URL after successful form submission
 
     def get(self, request, *args, **kwargs):
@@ -358,5 +371,25 @@ class CreateRfpView(CreateView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # Handle form submission for POST requests
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)  
+        return response
+    def form_valid(self, form):
+        # Save the form data and then send the email
+        response = super().form_valid(form)
+        
+        selected_vendors = form.cleaned_data['vendors']
+        
+        # Prepare the email subject and body
+        subject = 'New RFP Added'
+        body = f"A new RFP titled '{self.object.rfp_title}' has been added. Check it out!"
+        
+        try:
+            # Send the email to selected vendors
+            for vendor in selected_vendors:
+                send_emails(subject, body, EMAIL, [vendor.email], PSWD)
+            
+            return response
+        except Exception as e:
+            # Handle email sending errors here
+            # You can log the error or take appropriate action
+            return JsonResponse({'success': False, 'error': str(e)})

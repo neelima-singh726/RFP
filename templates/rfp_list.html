@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <title>Your Page Title</title>
     <style>
         
@@ -115,6 +118,20 @@
         .action-link{
             color:green;
         }
+        
+        .add-rfp-button {
+            float: right;
+            margin: 5px;
+            margin-bottom: 15px; 
+           
+        }
+
+
+        .add-rfp-button:hover {
+            background-color: #218838; 
+        }
+       
+
 
     </style>
 </head>
@@ -158,12 +175,14 @@
     <div class="section-2">
         <nav class="navbar navbar-light bg-light">
             <p>Welcome </p>
+            &nbsp;<a href = "{%url 'logout'%}">Logout</a>
           </nav>
           <div>
             <h3>RFP List</h3>
           </div>
           <div class="bs-example">
-            <a href = "{% url 'create-rfp'%}" class="btn btn-primary">+Add RFP</a>
+            <a href="{% url 'create-rfp' %}" class= "btn btn-success add-rfp-button" >+Add RFP</a>
+            <br>
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -186,11 +205,13 @@
                         <td>{{ rfp.max_amount }}</td>
                         <td>
                             <div class="status-box">
-                                <div class="status-cell status-green">Open</div> <!-- Set the initial status here -->
+                                <div class="status-cell {% if rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
+                                    {{ rfp.status|capfirst }} <!-- Display the status -->
+                                </div>
                             </div>
                         </td>
                         <td>
-                            <a href="{% url 'rfp-open' rfp.id %}" class="action-link approve-link" data-status="Approved" ><I>Open /</I></a>
+                            <a href="{% url 'rfp-open' rfp.id %}" class="action-link approve-link" data-status="Approved"><I>Open /</I></a>
                             <a href="{% url 'rfp-close' rfp.id %}" class="action-link reject-link" data-status="Rejected"><I>Close</I></a>
                         </td>
                     </tr>

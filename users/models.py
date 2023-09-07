@@ -1,3 +1,4 @@
+from django import forms
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -37,9 +38,12 @@ class Category(models.Model):
 class RFPList(models.Model):
     id = models.AutoField(primary_key=True)
     rfp_title = models.CharField(max_length=255)
+    item_desc = models.TextField()
     last_date = models.DateField()
     min_amount = models.FloatField()
     max_amount = models.FloatField()
+    vendors = models.ManyToManyField(Vendor)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=10, 
         choices=[('open', 'Open'), ('close', 'Close')],

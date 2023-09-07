@@ -124,7 +124,7 @@
            <h1><I>Velocity</I></h1>
             <br>
             
-            <a href="{%url 'home-vendor'%}" class="option-link">
+            <a href="{%url 'home-admin'%}" class="option-link">
                 &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bank" viewBox="0 0 16 16">
                     <path d="m8 0 6.61 3h.89a.5.5 0 0 1 .50.50v2a.5.5 0 0 1-.50.50H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.50-.50v-2a.5.5 0 0 1 .50-.50h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
                 </svg>
@@ -186,11 +186,13 @@
                         <td>{{ vendor.phone_no }}</td>
                         <td>
                             <div class="status-box">
-                                <div class="status-cell status-grey">Pending</div> <!-- Set the initial status here -->
+                                <div class="status-cell {% if vendor.v_status == 'approve' %}status-green{% elif vendor.v_status == 'reject' %}status-red{% else %}status-grey{% endif %}">
+                                    {{ vendor.get_v_status_display }} <!-- Display the status based on the model field -->
+                                </div>
                             </div>
                         </td>
                         <td>
-                            <a href="{% url 'vendor-approve' vendor.vendor_id %}" class="action-link approve-link" data-status="Approved" ><I>Approve /</I></a>
+                            <a href="{% url 'vendor-approve' vendor.vendor_id %}" class="action-link approve-link" data-status="Approved"><I>Approve /</I></a>
                             <a href="{% url 'vendor-reject' vendor.vendor_id %}" class="action-link reject-link" data-status="Rejected"><I>Reject</I></a>
                         </td>
                     </tr>
@@ -198,21 +200,7 @@
                 </tbody>
             </table>
             
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    const actionLinks = document.querySelectorAll(".action-link");
-                    actionLinks.forEach(function (link) {
-                        link.addEventListener("click", function (event) {
-                            event.preventDefault();
-                            const statusCell = this.parentElement.previousElementSibling.querySelector(".status-cell");
-                            const status = this.getAttribute("data-status");
-                            statusCell.textContent = status;
-                            statusCell.className = "status-cell";
-                            statusCell.classList.add(status.toLowerCase() === "approved" ? "status-green" : "status-red");
-                        });
-                    });
-                });
-            </script>
+            
             
         </div>
         <div class="pagination">
