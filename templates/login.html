@@ -1,21 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container center-card">
-    <div class="card square-card"> <!-- Add square-card class -->
-        <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->
-            <span class="navbar-brand">Welcome to RFP</span>
-        </nav>
-        <div class="card-body">
-            <form method="POST">
-                {% csrf_token %}
-                <h2>Login</h2>
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">Login</button> <!-- Used Bootstrap button class -->
-                <p>Don't have an account? <a href="{% url 'register' %}">Register as admin</a></p>
-                <p>Don't have an account? <a href="{% url 'register-vendor' %}">Register as vendor</a></p>
-                <p>Forgot Password <a href = "{% url 'forgot-password' %}">Forgot Password </a><p>
-            </form>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h2 class="text-center">Login</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            {{ form.username.label_tag }}
+                            {{ form.username }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.password.label_tag }}
+                            {{ form.password }}
+                        </div>
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <p class="text-center">Don't have an account? <a href="{% url 'register' %}">Register as admin</a></p>
+                    <p class="text-center">Don't have an account? <a href="{% url 'register-vendor' %}">Register as vendor</a></p>
+                    <p class="text-center"><a href="{% url 'forgot-password' %}">Forgot Password?</a></p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

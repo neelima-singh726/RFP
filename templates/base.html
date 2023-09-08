@@ -37,9 +37,9 @@
         }
     </style>
     {% comment %} <script src="{% static 'js/app.js' %}" defer></script> {% endcomment %}
-    <title>{% if title %} {{ title }} {% else %} RFP Management System {% endif %}</title>
+    <title>{% if title %} {{ title }} {% else %} RFP {% endif %}</title>
 </head>
-<body>
+<body style="background-image: url('https://www.shutterstock.com/shutterstock/photos/1518108761/display_1500/stock-vector-internet-digital-syber-security-technology-concept-for-business-background-lock-on-circuit-board-1518108761.jpg">
     <header>
      
     </header>
@@ -55,6 +55,7 @@
         {% endif %}
         
         {% block content %}
+
         {% endblock content %}
     </main>
  

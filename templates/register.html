@@ -2,16 +2,16 @@
 
 {% block content %}
 <div class="container center-card">
-    <div class="card square-card"> <!-- Add square-card class -->
+    <div class="card p-4"> <!-- Add p-4 class for padding -->
         <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->
             <span class="navbar-brand">Welcome to RFP</span>
         </nav>
-        <div class="card-body">
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
             <form method="POST">
                 {% csrf_token %}
-                <h2>Sign Up</h2>
+                <h2 class="mb-4">Sign Up</h2> 
                 {% for field in form %}
-                <p>
+                    <div class="form-group">
                     {% if field.errors %}
                     <ul class="errorlist">
                         {% for error in field.errors %}
@@ -20,12 +20,12 @@
                     </ul>
                     {% endif %}
                     {{ field.label_tag }} {{ field }}
-                </p>
+            </div>
                 {% endfor %}
                 <button type="submit" class="btn btn-primary">Register</button> <!-- Used Bootstrap button class -->
-                <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-                <p>Register as Vendor <a href="{% url 'register-vendor' %}">Register</a></p>
-                <p>Forgot Password <a href = "{% url 'forgot-password' %}">Forgot Password </a><p>
+                    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                    <p>Register as Vendor <a href="{% url 'register-vendor' %}">Register</a></p>
+                    <p>Forgot Password <a href="{% url 'forgot-password' %}">Forgot Password</a></p>
             </form>
         </div>
     </div>
