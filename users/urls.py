@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+
+
 urlpatterns = [
     path('login/', views.SignInView.as_view(), name='login'),
     path('logout/', views.SignOutView.as_view(), name='logout'),
@@ -18,8 +20,8 @@ urlpatterns = [
     path('rfp-open/<int:id>/', views.rfpopen, name='rfp-open'),
     path('rfp-close/<int:id>/', views.rfpclose, name='rfp-close'),
     path('create-rfp/', views.CreateRfpView.as_view(), name='create-rfp'),
-    path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote')
-
-
+    path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote'),
+   
+    
 
 ]

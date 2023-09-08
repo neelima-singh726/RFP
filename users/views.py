@@ -10,20 +10,30 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import logging
 from django.views.generic.edit import CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 from users.models import Category, Quotes, RFPList, Vendor
 
 logger = logging.getLogger(__name__)
-class HomeView(View):
-    """View for the home page.
+
+
+def custom_404_view(request, exception):
+    return render(request, '404.html', status=404)
+
+
+class HomeView(LoginRequiredMixin,View):
+    """
+    View for the home page.
 
     Args:
         View (class): The base View class.
 
     Returns:
-        HttpResponse: Renders home page with the list of posts.
+        HttpResponse: Renders home page for admin.
     """
+
+
     def get(self, request):
         try:
             return render(request, 'homeAdmin.html')
@@ -35,14 +45,14 @@ class HomeView(View):
             error_message = str(e)  # Convert the exception to a string
             return HttpResponse(f"An error occurred: {error_message}", status=500)
         
-class HomeVendorView(View):
-    """View for the home page.
+class HomeVendorView(LoginRequiredMixin,View):
+    """ View for the home page.
 
     Args:
         View (class): The base View class.
 
     Returns:
-        HttpResponse: Renders home page with the list of posts.
+        HttpResponse: Renders home page for vendor.
     """
     def get(self, request):
         try:
@@ -63,7 +73,7 @@ class SignInView(View):
 
     Returns:
         HttpResponse: Renders login form in case of invalid login 
-        Redirects to home page for valid login.
+        Redirects to home page (vendor or admin based on credentials) for valid login.
     """
     def get(self, request):
         try:
@@ -125,7 +135,7 @@ class SignUpView(View):
         request (HttpRequest): The request object.
 
     Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
+        HttpResponse: Rendered registration form for admin or a redirection to the home page after successful registration.
     """
     def get(self, request):
         try:
@@ -167,7 +177,7 @@ class SignUpVendorView(View):
         request (HttpRequest): The request object.
 
     Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
+        HttpResponse: Rendered registration form for vendor or a redirection to the home page after successful registration.
     """
     def get(self, request):
         try:
@@ -203,8 +213,7 @@ class VendorView(View):
     """View for Vendor Page.
 
     Args:
-        request (HttpRequest): The request object.
-
+        request (HttpRequest):Base View
     Returns:
         HttpResponse: Renderes vendors list.
     """
@@ -215,28 +224,29 @@ class VendorView(View):
 
 
 class RfpQuotesView(View):
-    """View for user sign up.
+    """View for listing rfp quoted by vendor.
 
     Args:
-        request (HttpRequest): The request object.
+        request (HttpRequest): Base View
 
     Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
+        HttpResponse: Renders quotes created by vendor, filter them as per admin needs, only approved vendors will be displayed.
     """
     def get(self, request):
-        rfps = RFPList.objects.all()
-        return render(request,'rfp_quotes.html',{'rfps':rfps})
-    def post(self, request):
-        return render(request,'rfp_quotes.html')
-
+        approved_vendors = Vendor.objects.filter(v_status='approve')
+        quotes = Quotes.objects.filter(vendor__in=approved_vendors).select_related('rfp', 'vendor').all()
+        context = {'quotes': quotes}
+        return render(request, 'rfp_quotes.html', context)
+    
+    
 class RfpListView(View):
-    """View for user sign up.
+    """View for Listing RFP created by admin.
 
     Args:
-        request (HttpRequest): The request object.
+        request (HttpRequest): Base View.
 
     Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
+        HttpResponse: Renders List of RFPs created.
     """
     def get(self, request):
         rfps = RFPList.objects.all()
@@ -244,20 +254,32 @@ class RfpListView(View):
     
 
 class CategoryView(View):
-    """View for user sign up.
+    """View for Categories.
 
     Args:
-        request (HttpRequest): The request object.
+        request (HttpRequest): Base View.
 
     Returns:
-        HttpResponse: Rendered registration form or a redirection to the home page after successful registration.
-    """
+        HttpResponse: Renders Catgory List Page."""
+    
     def get(self, request):
         category = Category.objects.all()
         return render(request,'category.html',{'category':category})
   
 
 def approve(request, vendor_id):
+    """method to Approve the Vendor
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        vendor_id (int): The ID of the vendor to be approved.
+
+    Raises:
+        Http404: If the vendor with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'vendor' page after approving the vendor.
+    """
     try:
         vendor = Vendor.objects.get(pk=vendor_id)
         vendor.v_status = 'approve'
@@ -267,6 +289,20 @@ def approve(request, vendor_id):
     return redirect('vendor')
 
 def reject(request, vendor_id):
+    """Rejects a vendor.
+
+    This method updates the status of the vendor with the given ID to 'reject'.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        vendor_id (int): The ID of the vendor to be rejected.
+
+    Raises:
+        Http404: If the vendor with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'vendor' page after rejecting the vendor.
+    """
     try:
         vendor = Vendor.objects.get(pk=vendor_id)
         vendor.v_status = 'reject'
@@ -276,6 +312,20 @@ def reject(request, vendor_id):
     return redirect('vendor')
 
 def rfpopen(request, id):
+    """Open an RFP.
+
+    This view opens an RFP by updating its status to 'open'.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        id (int): The ID of the RFPList to be opened.
+
+    Raises:
+        Http404: If the RFPList with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'rfp-list' page after opening the RFP.
+    """
     try:
         rfps = RFPList.objects.get(pk=id)
         rfps.status = 'open'
@@ -285,6 +335,20 @@ def rfpopen(request, id):
     return redirect('rfp-list')
 
 def rfpclose(request, id):
+    """Close an RFP.
+
+    This view closes an RFP by updating its status to 'close'.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        id (int): The ID of the RFPList to be closed.
+
+    Raises:
+        Http404: If the RFPList with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'rfp-list' page after closing the RFP.
+    """
     try:
         rfps = RFPList.objects.get(pk=id)
         rfps.status = 'close'
@@ -309,6 +373,16 @@ from base64 import urlsafe_b64decode, urlsafe_b64encode
 
 
 class SendEmailView(View):
+    """Send an email to the specified email address.
+
+        Args:
+            email (str): The recipient's email address.
+
+        Returns:
+            dict: A dictionary containing the success status of the email sending operation.
+                - 'success' (bool): True if the email was sent successfully, False otherwise.
+                - 'error' (str): An error message in case of failure.
+    """
     def send_email(self, email):
         try:
             subject = "Account Created"
@@ -335,26 +409,69 @@ class SendEmailView(View):
 
 
 class RfpForQuotesView(View):
-    def get(self, request):
-        rfps = RFPList.objects.all()
-        return render(request,'rfp_for_quotes.html',{'rfps':rfps})
+    """View for vendors to quote RFPs.
 
-    
+    Args:
+        View (Base Class): Base class view.
+    """
+
+    def get(self, request):
+        try:
+            rfps = RFPList.objects.all()
+        except RFPList.DoesNotExist:
+            raise Http404("No RFPs found")
+        
+        return render(request, 'rfp_for_quotes.html', {'rfps': rfps})
 
 
 def send_emails(subject, body, sender, recipients, password):
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = ', '.join(recipients)
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
-       smtp_server.login(sender, password)
-       smtp_server.sendmail(sender, recipients, msg.as_string())
-    print("Message sent!")
+    """Send broadcast emails.
 
+    This function sends an email to a list of recipients.
+
+    Args:
+        subject (str): The subject of the email.
+        body (str): The body of the email.
+        sender (str): The sender's email address.
+        recipients (list): A list of recipient email addresses.
+        password (str): The password of the sender's email address.
+
+    Returns:
+        None
+
+    Raises:
+        Exception: If an error occurs during the email sending process.
+    """
+    try:
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = ', '.join(recipients)
+        
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+            smtp_server.login(sender, password)
+            smtp_server.sendmail(sender, recipients, msg.as_string())
+        
+        print("Message sent!")
+    except Exception as e:
+        # Handle email sending errors here
+        # You can log the error or take appropriate action
+        print(f"Error sending email: {str(e)}")
 
 
 class CreateRfpView(CreateView):
+    """Class-based view for creating a new Request for Proposal (RFP).
+
+    This view is called when the 'Create Rfp' button is clicked and is used to create a new RFP.
+
+    Args:
+        CreateView (class): The base class for Django class-based views.
+
+    Attributes:
+        model (class): The model associated with the view (RFPList in this case).
+        fields (list): The fields of the model that should be displayed in the form.
+        success_url (str): The URL to redirect to after a successful form submission.
+    """
     model = RFPList
     fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','category'] 
     success_url = reverse_lazy('rfp-list')  # Redirect to rfp-list URL after successful form submission
@@ -392,6 +509,16 @@ class CreateRfpView(CreateView):
             return JsonResponse({'success': False, 'error': str(e)})
         
 class CreateRFpForQuoteView(CreateView):
+    """Class-based view for creating a new Request for Proposal (RFP) for quotes.
+
+    Args:
+        CreateView (class): The base class for Django class-based views.
+
+    Attributes:
+        model (class): The model associated with the view (Quotes in this case).
+        fields (list): The fields of the model that should be displayed in the form.
+        success_url (str): The URL to redirect to after a successful form submission.
+    """
     model = Quotes
     fields = ['vendor_price','item_desc','quantity','total_price'] 
     success_url = reverse_lazy('rfp-for-quotes')  # Redirect to rfp-list URL after successful form submission
