@@ -30,14 +30,14 @@ class RfpListForm(forms.ModelForm):
         model = RFPList
         fields = ['rfp_title', 'item_desc', 'last_date', 'min_amount', 'max_amount','category']
    
-    category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        required=True,  # Allow no selection as well
-    )
-
 from .models import Quotes
 
 class QuotesForm(forms.ModelForm):
     class Meta:
         model = Quotes
         fields = ['vendor_price', 'item_desc','quantity', 'total_price']
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['c_name','c_status'] 

@@ -21,7 +21,11 @@ urlpatterns = [
     path('rfp-close/<int:id>/', views.rfpclose, name='rfp-close'),
     path('create-rfp/', views.CreateRfpView.as_view(), name='create-rfp'),
     path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote'),
-   
-    
+    path('forgot-password/', views.forgot_password, name='forgot-password'),
+    path("reset/<uidb64>/<token>/", views.reset_password, name = 'reset'),
+    path('send-email/', views.send_reset_email, name='send-email'),
+    path('activate/<int:category_id>/', views.activate, name='activate'),
+    path('deactivate/<int:category_id>/', views.deactivate, name='deactivate'),
+    path('create-category/', views.CreateCategoryView.as_view(), name='create-category'),
 
 ]

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <title>Your Page Title</title>
+    <title>RFP List</title>
     <style>
         
         .section-1 {
@@ -55,7 +55,7 @@
         .bs-example table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Fixed layout to cover parent width */
+            table-layout: fixed; 
         }
     
         .bs-example th {
@@ -66,17 +66,17 @@
     
         .bs-example th,
         .bs-example td {
-            padding: 10px; /* Add padding to cells */
-            border: 1px solid #ddd; /* Add border for cells */
-            word-wrap: break-word; /* Allow text to wrap within cells */
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            word-wrap: break-word; 
         }
     
         .bs-example tbody tr:nth-child(even) {
-            background-color: #f2f2f2; /* Alternate row background color */
+            background-color: #f2f2f2; 
         }
     
         .bs-example tbody tr:hover {
-            background-color: #ddd; /* Hovered row background color */
+            background-color: #ddd; 
         }
     
         .pagination {
@@ -130,7 +130,13 @@
         .add-rfp-button:hover {
             background-color: #218838; 
         }
-       
+        .green-link {
+            color: green; /* Change to your desired green color */
+        }
+        
+        .red-link {
+            color: red; /* Change to your desired red color */
+        }
 
 
     </style>
@@ -211,9 +217,12 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{% url 'rfp-open' rfp.id %}" class="action-link approve-link" data-status="Approved"><I>Open /</I></a>
-                            <a href="{% url 'rfp-close' rfp.id %}" class="action-link reject-link" data-status="Rejected"><I>Close</I></a>
-                        </td>
+                            {% if rfp.status == "close"%}
+                                <a href="{% url 'rfp-open' rfp.id %}" class="action-link approve-link green link" data-status="Approved"><I>Open </I></a>
+                            {%else%}
+                                <a href="{% url 'rfp-close' rfp.id %}" class="action-link reject-link red link" data-status="Rejected"><I>Close</I></a>
+                            {% endif %}
+                            </td>
                     </tr>
                     {% endfor %}
                 </tbody>

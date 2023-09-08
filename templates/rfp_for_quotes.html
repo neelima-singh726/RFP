@@ -189,12 +189,14 @@
                         <td>
                             <div class="status-box">
                                 <div class="status-cell {% if rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
-                                    {{ rfp.status|capfirst }} <!-- Display the status -->
+                                    {{ rfp.status|capfirst }} 
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <a href="{% url 'apply-for-quote' rfp.id  %}" class="action-link approve-link" data-status="Approved"><I>Apply</I></a>
+                            {% if rfp.status == 'open' %}
+                            <a href="{% url 'apply-for-quote' rfp.id  %}" class="action-link approve-link" data-status="Approved"><I><Strong><h4>Apply</h4></Strong></I></a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

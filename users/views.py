@@ -77,8 +77,6 @@ class SignInView(View):
     """
     def get(self, request):
         try:
-            # if request.user.is_authenticated:
-            #     return redirect('home')
             form = LoginForm()
             return render(request, 'login.html', {'form': form})
         except Exception as e:
@@ -95,7 +93,6 @@ class SignInView(View):
                 user = authenticate(request, username=username, password=password)
                 if user:
                     login(request, user)
-                    messages.success(request, f'Hi {username.title()}, welcome back!')
                     if user.is_superuser:
                         return redirect('home-admin')
                     else:
@@ -160,7 +157,6 @@ class SignUpView(View):
                 login(request, user)
                 email_sender_view = SendEmailView()
                 response = email_sender_view.send_email(request.user.email)
-                messages.success(request, 'You have signed up successfully.')
                 return redirect('home-admin')
             else:
                 return render(request, 'register.html', {'form': form})
@@ -209,7 +205,7 @@ class SignUpVendorView(View):
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('register-vendor')
 
-class VendorView(View):
+class VendorView(LoginRequiredMixin,View):
     """View for Vendor Page.
 
     Args:
@@ -223,7 +219,7 @@ class VendorView(View):
         return render(request,'Vendor.html',{'vendors':vendors})
 
 
-class RfpQuotesView(View):
+class RfpQuotesView(LoginRequiredMixin,View):
     """View for listing rfp quoted by vendor.
 
     Args:
@@ -239,7 +235,7 @@ class RfpQuotesView(View):
         return render(request, 'rfp_quotes.html', context)
     
     
-class RfpListView(View):
+class RfpListView(LoginRequiredMixin,View):
     """View for Listing RFP created by admin.
 
     Args:
@@ -253,7 +249,7 @@ class RfpListView(View):
         return render(request,'rfp_list.html',{'rfps':rfps})
     
 
-class CategoryView(View):
+class CategoryView(LoginRequiredMixin,View):
     """View for Categories.
 
     Args:
@@ -357,6 +353,53 @@ def rfpclose(request, id):
         raise Http404("RFPLIST does not exist")
     return redirect('rfp-list')
 
+def activate(request,category_id):
+    """Activate a category.
+
+    This view is used to set the status of a category to 'active'.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        Category_id (int): The ID of the category to activate.
+
+    Raises:
+        Http404: If the category with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'category' page after activating the category.
+    """
+    try:
+        category = Category.objects.get(pk=category_id)
+        category.c_status = 'active'
+        category.save()
+    except Category.DoesNotExist:
+        raise Http404("catgory does not exist")
+    return redirect('category')
+
+def deactivate(request, category_id):
+    """Deactivate a category.
+
+    This view is used to set the status of a category to 'inactive'.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        Category_id (int): The ID of the category to deactivate.
+
+    Raises:
+        Http404: If the category with the given ID does not exist.
+
+    Returns:
+        HttpResponseRedirect: Redirects to the 'category' page after deactivating the category.
+    """
+    
+    try:
+        category = Category.objects.get(pk=category_id)
+        category.c_status = 'inactive'
+        category.save()
+    except Category.DoesNotExist:
+        raise Http404("category does not exist")
+    return redirect('category')
+
 
 from django.http import HttpResponse, JsonResponse
 import smtplib
@@ -408,7 +451,7 @@ class SendEmailView(View):
 
 
 
-class RfpForQuotesView(View):
+class RfpForQuotesView(LoginRequiredMixin,View):
     """View for vendors to quote RFPs.
 
     Args:
@@ -483,7 +526,12 @@ class CreateRfpView(CreateView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)  
         return response
-    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter the queryset for the 'category' field to show only active categories
+        form.fields['category'].queryset = Category.objects.filter(c_status='active')
+        return form
+        
     def form_valid(self, form):
         form.instance.created_by_id = self.request.user.id
         # Save the form data and then send the email
@@ -561,3 +609,75 @@ class CreateRFpForQuoteView(CreateView):
             # Handle email sending errors here
             # You can log the error or take appropriate action
             return JsonResponse({'success': False, 'error': str(e)})
+        
+
+def reset_password(request, uidb64, token):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        new_password = data.get('new_password')
+        
+        try:
+            uid = urlsafe_b64decode(uidb64).decode('utf-8')
+            user = User.objects.get(pk=uid)
+            
+            if default_token_generator.check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid token'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return render(request, 'reset_password.html', {'uidb64': uidb64, 'token': token})
+
+def forgot_password(request):
+    return render(request, 'forgot_password.html')
+
+def send_reset_email(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        if email:
+            try:
+                user = User.objects.get(email=email)
+                token = default_token_generator.make_token(user)
+                uidb64 = urlsafe_b64encode(force_bytes(user.pk))
+                reset_link = f"http://127.0.0.1:8000/reset/{uidb64.decode()}/{token}/"      
+                subject = "Reset Password"
+                body = f"Click the following link to reset your password: {reset_link}"
+                sender = EMAIL
+                recipients = [email]
+                password = PSWD
+                
+                send_emails(subject, body, sender, recipients, password)
+                
+                return JsonResponse({'success': True})
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False})
+
+class CreateCategoryView(CreateView):
+    """Class-based view for creating a new Category
+
+    This view is called when the 'Create Category' button is clicked and is used to create a new category.
+
+    Args:
+        CreateView (class): The base class for Django class-based views.
+
+    Attributes:
+        model (class): The model associated with the view .
+        fields (list): The fields of the model that should be displayed in the form.
+        success_url (str): The URL to redirect to after a successful form submission.
+    """
+    model = Category
+    fields = ['c_name','c_status'] 
+    success_url = reverse_lazy('category')  # Redirect to rfp-list URL after successful form submission
+
+    def get(self, request, *args, **kwargs):
+        # Display the form for GET requests
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)  
+        return response

@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Page Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <title>Catgory</title>
     <style>
-        /* Styling for the two sections */
         .section-1 {
             background-color: #332D2D;
             width: 20%;
@@ -19,6 +21,7 @@
             width: 80%;
             height: 100vh;
             float: right;
+            
         }
 
         .options {
@@ -41,39 +44,100 @@
             text-align: right;
             padding: 10px;
         }
-       
-        .container {
-            background-color: #f0f0f0; /* Change the background color */
-            padding: 20px; /* Add padding */
-            margin: 20px; /* Add margin */
+        .bs-example {
+            width: 90%;
+            border-radius: 10px;
+            margin: 10px;
+            background-color: white;
+        }
+    
+        .bs-example table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; 
+        }
+    
+        .bs-example th {
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+    
+        .bs-example th,
+        .bs-example td {
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            word-wrap: break-word; 
+        }
+    
+        .bs-example tbody tr:nth-child(even) {
+            background-color: #f2f2f2; 
+        }
+    
+        .bs-example tbody tr:hover {
+            background-color: #ddd; 
+        }
+    
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+    
+        .pagination a {
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        .status-box {
+            display: flex;
+            align-items: center;
+            height: 30px; 
+        }
+    
+        .status-cell {
+            padding: 5px 10px;
+            border-radius: 30px;
+        }
+    
+        .status-green {
+            background-color: green;
+            color: white;
+        }
+    
+        .status-red {
+            background-color: red;
+            color: white;
+        }
+        .status-grey {
+            background-color: grey;
+            color: white;
+        }
+        .action-link{
+            color:green;
+        }
+        
+        .add-rfp-button {
+            float: right;
+            margin: 5px;
+            margin-bottom: 15px; 
+           
         }
 
-        /* Style the heading */
-        h1 {
-            font-size: 24px; /* Increase font size */
+
+        .add-rfp-button:hover {
+            background-color: #218838; 
+        }
+        .green-link {
+            color: green; 
+        }
+        
+        .red-link {
+            color: red; 
         }
 
-        /* Style the list */
-        ul {
-            list-style-type: none; /* Remove bullet points */
-            padding-left: 0; /* Remove default padding */
-        }
 
-        /* Style each list item with alternate colors */
-        li:nth-child(odd) {
-            background-color:  #e1bee7;
-        }
-
-        li:nth-child(even) {
-            background-color:  #d1c4e9;
-        }
-
-        /* Increase font size for list items */
-        li {
-            font-size: 18px;
-            padding: 10px; /* Add padding to each list item */
-            margin-bottom: 5px; /* Add margin between list items */
-        }
 
     </style>
 </head>
@@ -116,16 +180,47 @@
     </div>
     <div class="section-2">
         <nav class="navbar navbar-light bg-light">
-            <p>Welcome username</p>
+            <p>Welcome </p>
+            &nbsp;<a href = "{%url 'logout'%}">Logout</a>
           </nav>
-          <div class ="container">
-                <h1>Category List</h1>
-                <ul>
+          <div>
+            <h3>RFP List</h3>
+          </div>
+          <div class="bs-example">
+            <a href="{% url 'create-category' %}" class= "btn btn-success add-rfp-button" >+Add Category</a>
+            <br>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Sr no.</th>
+                        <th>Category Name</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for cat in category %}
-                    <li>{{ cat.c_name }}</li>
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ cat.c_name }}</td>
+                        <td>
+                            <div class="status-box">
+                                <div class="status-cell {% if cat.c_status == 'active' %}status-green{% else %}status-red{% endif %}">
+                                    {{ cat.c_status|capfirst }} <!-- Display the status -->
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {%if cat.c_status == "active" %}
+                                <a href="{% url 'deactivate' cat.category_id %}" class="action-link reject-link red-link" ><I><strong>Deactivate</strong></I></a>
+                            {%else%}
+                                <a href="{% url 'activate' cat.category_id %}" class="action-link approve-link green link" ><I><strong>Activate</strong></I></a>
+                            {% endif %}
+                            </td>
+                    </tr>
                     {% endfor %}
-                </ul>
-            </div>
-    </div>
+                </tbody>
+            </table>
+        </div>
 </body>
 </html>

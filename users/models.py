@@ -18,30 +18,14 @@ class Vendor(User):
     )
 
 class Category(models.Model):
-    CATEGORY_CHOICES = [
-        ('Electronics', 'Electronics'),
-        ('Stationary', 'Stationary'),
-        ('Office Decor', 'Office Decor'),
-        ('Furniture', 'Furniture'),
-    ]
-
-    Category_id = models.AutoField(primary_key=True)
+    category_id = models.AutoField(primary_key=True)
     c_name = models.CharField(
-        max_length=100,
-        choices=CATEGORY_CHOICES,
-        
-    )
+        max_length=100)
     c_status = models.CharField(
         max_length=10,
         choices=[('active', 'Active'), ('inactive', 'Inactive')],
         default='active',  # Set a default status here if needed
     )
-    c_action = models.CharField(
-        max_length=10,
-        choices=[('approve', 'Approve'), ('reject', 'Reject')],
-        default='approve',  # Set a default action here if needed
-    )
-
     def __str__(self):
         return self.c_name
     
