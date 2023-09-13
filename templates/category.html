@@ -137,7 +137,18 @@
             color: red; 
         }
 
-
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+    
+        .pagination a {
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
 
     </style>
 </head>
@@ -221,6 +232,33 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if category.has_previous %}
+                        <a href="?page=1">&laquo;</a> <!-- First page -->
+                        <a href="?page={{ category.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                    {% endif %}
+                    
+                    <!-- Display a fixed number of page numbers -->
+                    {% for page_num in category.paginator.page_range %}
+                        <a href="?page={{ page_num }}" {% if page_num == category.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+                    {% endfor %}
+            
+                    {% if category.has_next %}
+                        <a href="?page={{ category.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                        <a href="?page={{ category.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+                    {% endif %}
+                </span>
+            </div>
         </div>
+        {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 </body>
 </html>

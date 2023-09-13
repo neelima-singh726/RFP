@@ -8,8 +8,8 @@ urlpatterns = [
     path('logout/', views.SignOutView.as_view(), name='logout'),
     path('register/', views.SignUpView.as_view(), name='register'),
     path('register-vendor/', views.SignUpVendorView.as_view(), name='register-vendor'),
-    path('home-admin', views.HomeView.as_view(), name='home-admin'),
-    path('home-vendor', views.HomeVendorView.as_view(), name='home-vendor'),
+    path('home-admin/', views.HomeView.as_view(), name='home-admin'),
+    path('home-vendor/', views.HomeVendorView.as_view(), name='home-vendor'),
     path('vendor/', views.VendorView.as_view(), name='vendor'),
     path('rfp-list/', views.RfpListView.as_view(), name='rfp-list'),
     path('rfp-quotes/', views.RfpQuotesView.as_view(), name='rfp-quotes'),
@@ -27,5 +27,6 @@ urlpatterns = [
     path('activate/<int:category_id>/', views.activate, name='activate'),
     path('deactivate/<int:category_id>/', views.deactivate, name='deactivate'),
     path('create-category/', views.CreateCategoryView.as_view(), name='create-category'),
+    
 
 ]

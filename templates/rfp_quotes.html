@@ -74,7 +74,18 @@
         .bs-example tbody tr:hover {
             background-color: #ddd; /* Hovered row background color */
         }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
     
+        .pagination a {
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
 
     </style>
 </head>
@@ -143,7 +154,7 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ quote.rfp.id }}</td>
                             <td>{{ quote.rfp.rfp_title }}</td>
-                            <td>{{ quote.vendor.vendor_id }}</td>
+                            <td>{{ quote.vendor.user.id }}</td>
                             <td>{{ quote.vendor_price }}</td>
                             <td>{{ quote.quantity }}</td>
                             <td>{{ quote.total_price }}</td>
@@ -151,6 +162,24 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if quotes.has_previous %}
+                        <a href="?page=1">&laquo;</a> <!-- First page -->
+                        <a href="?page={{ quotes.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                    {% endif %}
+                    
+                    <!-- Display a fixed number of page numbers -->
+                    {% for page_num in quotes.paginator.page_range %}
+                        <a href="?page={{ page_num }}" {% if page_num == quotes.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+                    {% endfor %}
+            
+                    {% if quotes.has_next %}
+                        <a href="?page={{ quotes.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                        <a href="?page={{ quotes.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+                    {% endif %}
+                </span>
+            </div>
     </div>
 </body>
 </html>

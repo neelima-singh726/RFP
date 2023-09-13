@@ -1,21 +1,9 @@
+import random
 from django import forms
 from django.db import models
-from django.contrib.auth.models import User
+from django.utils import timezone
 
-
-
-class Vendor(User):
-    vendor_id = models.AutoField(primary_key=True)
-    No_of_emp = models.IntegerField()
-    gst_no = models.CharField(max_length=100)
-    pan_no = models.CharField(max_length=20)
-    phone_no = models.CharField(max_length=12)
-    revenue = models.CharField(max_length=255)
-    v_status = models.CharField(
-        max_length=10, 
-        choices=[('approve', 'Approve'), ('reject', 'Reject'),('pending','Pending')],
-        default='pending' 
-    )
+from rfp_project import settings  
 
 class Category(models.Model):
     category_id = models.AutoField(primary_key=True)
@@ -26,9 +14,56 @@ class Category(models.Model):
         choices=[('active', 'Active'), ('inactive', 'Inactive')],
         default='active',  # Set a default status here if needed
     )
+    created_date = models.DateTimeField(default=timezone.now)  # Add created_date field and set to the current date and time
+
     def __str__(self):
         return self.c_name
+
+    class Meta:
+        ordering = ['-created_date']
+
+from django.contrib.auth.models import AbstractUser, Group, Permission
+
+class User(AbstractUser):
+    is_admin = models.BooleanField(default=False)
+    is_vendor = models.BooleanField(default = False)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+    )
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField( max_length=150, blank=True)
+
+class Vendor(models.Model):
+    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
+    No_of_emp = models.IntegerField()
+    gst_no = models.CharField(max_length=100)
+    pan_no = models.CharField(max_length=20)
+    phone_no = models.CharField(max_length=12)
+    revenue = models.CharField(max_length=255)
+    v_status = models.CharField(
+        max_length=10, 
+        choices=[('approve', 'Approve'), ('reject', 'Reject'),('pending','Pending')],
+        default='pending' 
+    )
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(default=timezone.now)
     
+    class Meta:
+        ordering = ['-created_date']
+
+class Admin(models.Model):
+    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
+    created_date = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['-created_date']
+
+
+
+
+
+
 
 class RFPList(models.Model):
     id = models.AutoField(primary_key=True)
@@ -45,7 +80,10 @@ class RFPList(models.Model):
         default='open'
     )
     action = models.CharField(max_length=10, choices=[('open', 'Open'), ('close', 'Close')])
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_rfps')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_rfps')
+    created_date = models.DateTimeField(default=timezone.now)
+    class Meta:
+        ordering = ['-created_date']
 
 
 
@@ -58,9 +96,10 @@ class Quotes(models.Model):
     quantity = models.IntegerField()
     total_price = models.FloatField()
     rfp = models.ForeignKey(RFPList, on_delete=models.CASCADE, related_name='quotes')
-
+    applied = models.BooleanField(default=False)
+    created_date = models.DateTimeField(default=timezone.now)
     class Meta:
-        ordering = ['vendor_price']
+        ordering = ['-created_date']
 
     def __str__(self):
         return self.item_name

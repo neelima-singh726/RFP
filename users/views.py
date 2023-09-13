@@ -1,8 +1,9 @@
+import random
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from rfp_project.settings import EMAIL, PSWD
 from users.forms import LoginForm, QuotesForm, RegisterForm, RegisterFormVendor, RfpListForm
@@ -12,8 +13,10 @@ import logging
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from django.db import transaction
+from .models import  User
 
-from users.models import Category, Quotes, RFPList, Vendor
+from users.models import  Category, Quotes, RFPList, Vendor
 
 logger = logging.getLogger(__name__)
 
@@ -64,24 +67,15 @@ class HomeVendorView(LoginRequiredMixin,View):
             # Handle the exception here, you can customize the response
             error_message = str(e)  # Convert the exception to a string
             return HttpResponse(f"An error occurred: {error_message}", status=500)
-        
+
 class SignInView(View):
-    """View for user sign in/login
-
-    Args:
-        request (HttpRequest): The request object.
-
-    Returns:
-        HttpResponse: Renders login form in case of invalid login 
-        Redirects to home page (vendor or admin based on credentials) for valid login.
-    """
     def get(self, request):
         try:
             form = LoginForm()
             return render(request, 'login.html', {'form': form})
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
-            error_message = str(e) 
+            error_message = str(e)
             return redirect('login')
 
     def post(self, request):
@@ -93,17 +87,21 @@ class SignInView(View):
                 user = authenticate(request, username=username, password=password)
                 if user:
                     login(request, user)
-                    if user.is_superuser:
+
+                    # Check if the user is an admin or a vendor
+                    if user.is_admin:
                         return redirect('home-admin')
-                    else:
+                    elif user.is_vendor:
                         return redirect('home-vendor')
                     
             messages.error(request, 'Invalid username or password')
             return render(request, 'login.html', {'form': form})
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
-            error_message = str(e)            
+            error_message = str(e)
             return redirect('login')
+        
+
 
 class SignOutView(View):
     """View for user sign out.
@@ -125,7 +123,7 @@ class SignOutView(View):
             error_message = str(e)
             return redirect('login')
 
-class SignUpView(View):
+class SignUpView(CreateView):
     """View for user sign up.
 
     Args:
@@ -134,20 +132,50 @@ class SignUpView(View):
     Returns:
         HttpResponse: Rendered registration form for admin or a redirection to the home page after successful registration.
     """
+    template_name = 'register.html'
+    success_redirect_url = 'home-admin'
+    form_class = RegisterForm
+
     def get(self, request):
         try:
-            form = RegisterForm()
-            return render(request, 'register.html', {'form': form})
+            form = self.form_class()
+            return render(request, self.template_name, {'form': form})
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
             error_message = str(e)          
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('register')
+    def form_valid(self, form):
+        # Check if a user with the same email already exists
+        email = form.cleaned_data['email']
+        if User.objects.filter(email=email).exists():
+            messages.error(self.request, 'A user with this email address already exists.')
+            return redirect('register')
+
+        user = form.save(commit=False)
+        user.is_admin = True  # Set the user as an admin
+
+        # Modify user attributes here if needed
+        # user.some_attribute = some_value
+
+        user.save()
+        login(self.request, user)
+
+        messages.success(self.request, 'Admin registration successful!')
+
+        return redirect(reverse(self.success_redirect_url))
 
     def post(self, request):
         try:
-            form = RegisterForm(request.POST)
-            if form.is_valid():
+           form = self.form_class(request.POST)
+           if form.is_valid():
+                messages.success(self.request, 'Admin registration successful!')
+                # Check if a user with the same email already exists
+                email = form.cleaned_data['email']
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, 'A user with this email address already exists.')
+                    return redirect('register')
+
                 user = form.save(commit=False)
                 user.username = user.username.lower()
                 user.save()
@@ -156,17 +184,96 @@ class SignUpView(View):
                 user.save()
                 login(request, user)
                 email_sender_view = SendEmailView()
-                response = email_sender_view.send_email(request.user.email)
-                return redirect('home-admin')
-            else:
-                return render(request, 'register.html', {'form': form})
+                response = email_sender_view.send_email(user.email)
+                return redirect(self.success_redirect_url)
+           else:
+                return render(request, self.template_name, {'form': form})
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
             error_message = str(e)
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('register')
 
-class SignUpVendorView(View):
+class SignUpVendorView(CreateView):
+    template_name = 'registerVendor.html'
+    success_url = reverse_lazy('home-vendor')
+    form_class = RegisterFormVendor
+
+    def get(self, request):
+        try:
+            form = self.form_class()
+            return render(request, self.template_name, {'form': form})
+        except Exception as e:
+            logger.error(f"An error occurred: {str(e)}")
+            error_message = str(e)
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('register-vendor')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        # Check if a user with the same email already exists
+        email = form.cleaned_data['email']
+        if User.objects.filter(email=email).exists():
+              messages.error(self.request, 'A user with this email address already exists.')
+              return redirect('register')
+
+    # Create a user object
+        user = form.save(commit=False)
+        user.is_vendor = True  # Set the user as a vendor
+        user.save()  # Save the user object
+
+    # Get the selected category from the form
+        category_id = form.cleaned_data['category'].id
+        user = User.objects.get(email=email)
+    
+    # Create a Vendor instance related to the user with a valid category
+        vendor = Vendor(
+        user=user,
+        No_of_emp=form.cleaned_data['No_of_emp'],
+        gst_no=form.cleaned_data['gst_no'],
+        phone_no=form.cleaned_data['phone_no'],
+        revenue=form.cleaned_data['revenue'],
+        category_id=category_id,  # Assign the valid category ID
+        )
+        vendor.save()
+
+        login(self.request, user)
+    # Send email or perform other actions if needed
+
+        return super().form_valid(form)
+
+    def post(self, request):
+        try:
+            form = self.form_class(request.POST)
+            if form.is_valid():
+                # Check if a user with the same email already exists
+                email = form.cleaned_data['email']
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, 'A user with this email address already exists.')
+                    return redirect('register-vendor')
+                user = form.save()
+                # user.username = user.username.lower()
+                # user.save()
+                # user.is_superuser = False
+                # user.save()
+                login(request, user)
+                email_sender_view = SendEmailView()
+                response = email_sender_view.send_email(user.email)
+                return redirect(self.success_url)
+            else:
+                return render(request, self.template_name, {'form': form})
+        except Exception as e:
+            logger.error(f"An error occurred: {str(e)}")
+            error_message = str(e)
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('register-vendor')
+
+class SignUp_View(CreateView):
+    model = User
+    form_class = RegisterForm
+    template_name = 'register.html'
+
+class SignUp_VendorView(View):
     """View for user sign up.
 
     Args:
@@ -189,6 +296,11 @@ class SignUpVendorView(View):
         try:
             form = RegisterFormVendor(request.POST)
             if form.is_valid():
+                email = form.cleaned_data['email']  # Get the email from the form
+                # Check if a user with this email already exists
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, 'This email is already registered.')
+                    return redirect('register-vendor')
                 user = form.save(commit=False)
                 user.username = user.username.lower()
                 user.save()
@@ -205,6 +317,7 @@ class SignUpVendorView(View):
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('register-vendor')
 
+from django.core.paginator import Paginator
 class VendorView(LoginRequiredMixin,View):
     """View for Vendor Page.
 
@@ -216,6 +329,10 @@ class VendorView(LoginRequiredMixin,View):
     
     def get(self, request):
         vendors = Vendor.objects.all()
+        paginator = Paginator(vendors, 5)  # 5 vendors per page
+        page = request.GET.get('page')  # Get the current page number from the URL parameter
+        vendors = paginator.get_page(page)  # Get the vendors for the current page
+
         return render(request,'Vendor.html',{'vendors':vendors})
 
 
@@ -231,6 +348,9 @@ class RfpQuotesView(LoginRequiredMixin,View):
     def get(self, request):
         approved_vendors = Vendor.objects.filter(v_status='approve')
         quotes = Quotes.objects.filter(vendor__in=approved_vendors).select_related('rfp', 'vendor').all()
+        paginator = Paginator(quotes, 5)  # 5 vendors per page
+        page = request.GET.get('page')  # Get the current page number from the URL parameter
+        quotes = paginator.get_page(page) 
         context = {'quotes': quotes}
         return render(request, 'rfp_quotes.html', context)
     
@@ -245,7 +365,10 @@ class RfpListView(LoginRequiredMixin,View):
         HttpResponse: Renders List of RFPs created.
     """
     def get(self, request):
-        rfps = RFPList.objects.all()
+        rfps = RFPList.objects.filter(created_by=request.user)
+        paginator = Paginator(rfps, 5)  # 5 vendors per page
+        page = request.GET.get('page')  # Get the current page number from the URL parameter
+        rfps = paginator.get_page(page) 
         return render(request,'rfp_list.html',{'rfps':rfps})
     
 
@@ -260,6 +383,9 @@ class CategoryView(LoginRequiredMixin,View):
     
     def get(self, request):
         category = Category.objects.all()
+        paginator = Paginator(category, 5)  # 5 vendors per page
+        page = request.GET.get('page')  # Get the current page number from the URL parameter
+        category = paginator.get_page(page) 
         return render(request,'category.html',{'category':category})
   
 
@@ -280,10 +406,32 @@ def approve(request, vendor_id):
         vendor = Vendor.objects.get(pk=vendor_id)
         vendor.v_status = 'approve'
         vendor.save()
+        # code for approval email
+        subject = 'Status Approved'
+        body = f"Hi! your status has been approved."
+        
+        # Get the list of user emails (assuming you have a `User` model with an `email` field)
+        user_emails = Vendor.objects.select_related(
+        'user'
+        ).values_list(
+        'user__email',
+        flat = True
+         )
+        
+        # Convert the QuerySet to a list
+        recipients = list(user_emails)
+        
+        try:
+            # Send the email
+            send_emails(subject, body,EMAIL, recipients,PSWD)
+            return redirect('vendor')
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
     except Vendor.DoesNotExist:
         raise Http404("Vendor does not exist")
-    return redirect('vendor')
-
+        return redirect('vendor')
+    
 def reject(request, vendor_id):
     """Rejects a vendor.
 
@@ -372,6 +520,7 @@ def activate(request,category_id):
         category = Category.objects.get(pk=category_id)
         category.c_status = 'active'
         category.save()
+        
     except Category.DoesNotExist:
         raise Http404("catgory does not exist")
     return redirect('category')
@@ -408,7 +557,7 @@ import json
 import smtplib
 from django.http import JsonResponse
 from email.mime.text import MIMEText
-from django.contrib.auth.models import User
+from users.models import User
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
@@ -450,6 +599,7 @@ class SendEmailView(View):
             return {'success': False, 'error': str(e)}
 
 
+from django.db.models import OuterRef, Subquery
 
 class RfpForQuotesView(LoginRequiredMixin,View):
     """View for vendors to quote RFPs.
@@ -460,10 +610,21 @@ class RfpForQuotesView(LoginRequiredMixin,View):
 
     def get(self, request):
         try:
-            rfps = RFPList.objects.all()
+            # Subquery to check if the logged-in user has applied for each RFP
+            applied_subquery = Quotes.objects.filter(
+                vendor__user=request.user,
+                rfp=OuterRef('pk')
+            ).values('rfp')
+
+            # Query to fetch RFPs and exclude those for which the user has applied
+            rfps = RFPList.objects.exclude(id__in=Subquery(applied_subquery))
+
+            paginator = Paginator(rfps, 5)  # 5 RFPs per page
+            page = request.GET.get('page')  # Get the current page number from the URL parameter
+            rfps = paginator.get_page(page)
         except RFPList.DoesNotExist:
             raise Http404("No RFPs found")
-        
+
         return render(request, 'rfp_for_quotes.html', {'rfps': rfps})
 
 
@@ -542,7 +703,14 @@ class CreateRfpView(CreateView):
         body = f"A new RFP titled '{self.object.rfp_title}' has been added. Check it out!"
         
         # Get the list of user emails (assuming you have a `User` model with an `email` field)
-        user_emails = Vendor.objects.values_list('email', flat=True)
+        
+        user_emails = Vendor.objects.select_related(
+        'user'
+        ).values_list(
+        'user__email',
+        flat = True
+         )
+        # user_emails = Vendor.objects.values_list('email', flat=True)
         
         # Convert the QuerySet to a list
         recipients = list(user_emails)
@@ -580,7 +748,10 @@ class CreateRFpForQuoteView(CreateView):
         return response
     
     def form_valid(self, form):
-        vendor = self.request.user.vendor
+        try:
+             vendor = Vendor.objects.get(user_id=self.request.user.id)
+        except Vendor.DoesNotExist:
+             return JsonResponse({'success': False, 'error': 'Vendor not found for this user.'})
 
         # Get the rfp_id from the URL
         rfp_id = self.kwargs['rfp_id']
@@ -588,12 +759,20 @@ class CreateRFpForQuoteView(CreateView):
         # Retrieve the RFPList object based on the rfp_id
         rfp = RFPList.objects.get(pk=rfp_id)
 
+
         # Set the vendor and RFPList objects for the Quotes object
         form.instance.vendor = vendor
         form.instance.rfp = rfp
         form.instance.item_name = rfp.rfp_title
 
         response = super().form_valid(form)
+       
+        quotes = Quotes.objects.select_related('vendor', 'rfp').filter(vendor=vendor, rfp=rfp)
+
+        if quotes.exists():
+             for quote in quotes:
+                 quote.applied = True
+                 quote.save()
 
          # Prepare the email subject and body
         subject = 'New RFP  Added By Vendor'
@@ -604,11 +783,22 @@ class CreateRFpForQuoteView(CreateView):
         try:
             # Send the email
             send_emails(subject, body,EMAIL,[created_by_email],PSWD)
-            return response
+            # return response
         except Exception as e:
             # Handle email sending errors here
             # You can log the error or take appropriate action
             return JsonResponse({'success': False, 'error': str(e)})
+        
+        
+        # Prepare the context with a flag indicating whether the user has already applied
+        context = {
+            'rfp': rfp,
+            'quotes': quotes,
+            'user_has_applied': True,
+        }
+
+        # Render the template with the context and return the response
+        return render(self.request, 'rfp_for_quotes.html', context)
         
 
 def reset_password(request, uidb64, token):
@@ -657,6 +847,9 @@ def send_reset_email(request):
                 return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False})
 
+
+
+
 class CreateCategoryView(CreateView):
     """Class-based view for creating a new Category
 
@@ -677,6 +870,12 @@ class CreateCategoryView(CreateView):
     def get(self, request, *args, **kwargs):
         # Display the form for GET requests
         return super().get(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        # Save the category and set a success message
+        category = form.save()
+        messages.success(self.request, f'Category "{category.c_name}" has been created successfully!')
+        return super().form_valid(form)
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)  

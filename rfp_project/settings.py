@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'SECRET_KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -180,3 +180,11 @@ TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = '+19403503254'
 PSWD = config('PSWD')
 EMAIL = config('EMAIL')
+
+LOGIN_URL = 'login'
+# AUTHENTICATION_BACKENDS = [
+#      'users.backend.CustomAuthBackend',
+#      'django.contrib.auth.backends.ModelBackend',
+# ]
+
+AUTH_USER_MODEL = 'users.User'

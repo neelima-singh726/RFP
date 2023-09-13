@@ -22,5 +22,4 @@ handler404 = 'users.views.custom_404_view'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('users.urls')),
-    # path('',include('adminPanel.urls')),
 ]

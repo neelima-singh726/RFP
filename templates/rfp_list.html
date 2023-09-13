@@ -131,13 +131,24 @@
             background-color: #218838; 
         }
         .green-link {
-            color: green; /* Change to your desired green color */
+            color: green; 
         }
         
         .red-link {
-            color: red; /* Change to your desired red color */
+            color: red;
         }
-
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+    
+        .pagination a {
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
 
     </style>
 </head>
@@ -227,6 +238,24 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if rfps.has_previous %}
+                        <a href="?page=1">&laquo;</a> <!-- First page -->
+                        <a href="?page={{ rfps.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                    {% endif %}
+                    
+                    <!-- Display a fixed number of page numbers -->
+                    {% for page_num in rfps.paginator.page_range %}
+                        <a href="?page={{ page_num }}" {% if page_num == rfps.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+                    {% endfor %}
+            
+                    {% if rfps.has_next %}
+                        <a href="?page={{ rfps.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                        <a href="?page={{ rfps.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+                    {% endif %}
+                </span>
+            </div>
     </div>
 </body>
 </html>

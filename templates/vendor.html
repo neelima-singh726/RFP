@@ -181,10 +181,10 @@
                     {% for vendor in vendors %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
-                        <td>{{ vendor.vendor_id }}</td>
-                        <td>{{ vendor.first_name }}</td>
-                        <td>{{ vendor.last_name }}</td>
-                        <td>{{ vendor.email }}</td>
+                        <td>{{ vendor.user.id }}</td>
+                        <td>{{ vendor.user.first_name }}</td>
+                        <td>{{ vendor.user.last_name }}</td>
+                        <td>{{ vendor.user.email }}</td>
                         <td>{{ vendor.phone_no }}</td>
                         <td>
                             <div class="status-box">
@@ -194,8 +194,8 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{% url 'vendor-approve' vendor.vendor_id %}" class="action-link approve-link" data-status="Approved"><I>Approve /</I></a>
-                            <a href="{% url 'vendor-reject' vendor.vendor_id %}" class="action-link reject-link" data-status="Rejected"><I>Reject</I></a>
+                            <a href="{% url 'vendor-approve' vendor.user.id %}" class="action-link approve-link" data-status="Approved"><I>Approve /</I></a>
+                            <a href="{% url 'vendor-reject' vendor.user.id %}" class="action-link reject-link" data-status="Rejected"><I>Reject</I></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -206,8 +206,24 @@
             
         </div>
         <div class="pagination">
-            
+            <span class="step-links">
+                {% if vendors.has_previous %}
+                    <a href="?page=1">&laquo;</a> <!-- First page -->
+                    <a href="?page={{ vendors.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                {% endif %}
+                
+                <!-- Display a fixed number of page numbers -->
+                {% for page_num in vendors.paginator.page_range %}
+                    <a href="?page={{ page_num }}" {% if page_num == vendors.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+                {% endfor %}
+        
+                {% if vendors.has_next %}
+                    <a href="?page={{ vendors.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                    <a href="?page={{ vendors.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+                {% endif %}
+            </span>
         </div>
+        
     </div>
 </body>
 </html>

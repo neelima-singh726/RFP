@@ -131,7 +131,18 @@
                 background-color: #218838; 
             }
            
-    
+            .pagination {
+                margin-top: 20px;
+                text-align: center;
+            }
+        
+            .pagination a {
+                text-decoration: none;
+                background-color: #333;
+                color: white;
+                padding: 5px 10px;
+                margin: 0 5px;
+            }
     
         </style>
 </head>
@@ -147,7 +158,7 @@
                 </svg>
                 &nbsp;&nbsp;Dashboard</a>
             
-            <a href="{% url 'rfp-quotes'%}" class="option-link">
+            <a href="{% url 'rfp-for-quotes'%}" class="option-link">
                 &nbsp;&nbsp;&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bookmark-heart" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M8 4.41c1.387-1.425 4.854 1.07 0 4.277C3.146 5.48 6.613 2.986 8 4.412z"/>
                     <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
@@ -195,13 +206,44 @@
                         </td>
                         <td>
                             {% if rfp.status == 'open' %}
-                            <a href="{% url 'apply-for-quote' rfp.id  %}" class="action-link approve-link" data-status="Approved"><I><Strong><h4>Apply</h4></Strong></I></a>
+                                {% if not user_has_applied %}
+                                    <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
+                                        <I><Strong><h4>Apply</h4></Strong></I>
+                                    </a>
+                                {% else %}
+                                    {% if rfp.id in user_applied_rfps %}
+                                        <!-- Disable the "Apply" button if the user has already applied for this RFP -->
+                                        <button class="btn btn-secondary" disabled>Applied</button>
+                                    {% else %}
+                                        <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
+                                            <I><Strong><h4>Apply</h4></Strong></I>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if rfps.has_previous %}
+                        <a href="?page=1">&laquo;</a> <!-- First page -->
+                        <a href="?page={{ rfps.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                    {% endif %}
+                    
+                    <!-- Display a fixed number of page numbers -->
+                    {% for page_num in rfps.paginator.page_range %}
+                        <a href="?page={{ page_num }}" {% if page_num == rfps.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+                    {% endfor %}
+            
+                    {% if rfps.has_next %}
+                        <a href="?page={{ rfps.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                        <a href="?page={{ rfps.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+                    {% endif %}
+                </span>
+            </div>
     </div>
 </body>
 </html>
