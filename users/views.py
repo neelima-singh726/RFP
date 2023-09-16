@@ -1,6 +1,6 @@
 import random
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse, reverse_lazy
@@ -598,25 +598,26 @@ class SendEmailView(View):
             return {'success': False, 'error': str(e)}
 
 
+from django.db.models import Exists, OuterRef
+
+
 from django.db.models import OuterRef, Subquery
-
-class RfpForQuotesView(LoginRequiredMixin,View):
-    """View for vendors to quote RFPs.
-
-    Args:
-        View (Base Class): Base class view.
-    """
+class RfpForQuotesView(LoginRequiredMixin, View):
+    """View for vendors to quote RFPs."""
 
     def get(self, request):
         try:
-            # Subquery to check if the logged-in user has applied for each RFP
-            applied_subquery = Quotes.objects.filter(
-                vendor__user=request.user,
-                rfp=OuterRef('pk')
-            ).values('rfp')
+            # Get the list of RFPs
+            rfps = RFPList.objects.all()
 
-            # Query to fetch RFPs and exclude those for which the user has applied
-            rfps = RFPList.objects.exclude(id__in=Subquery(applied_subquery))
+            # Get the list of RFPs where the vendor is the winner
+            won_rfps = RFPList.objects.filter(quotes__winner=request.user).distinct()
+
+            # Get the list of RFP IDs for which the vendor has already applied
+            applied_rfps = Quotes.objects.filter(
+                vendor__user=request.user,
+                applied=True
+            ).values_list('rfp_id', flat=True)
 
             paginator = Paginator(rfps, 5)  # 5 RFPs per page
             page = request.GET.get('page')  # Get the current page number from the URL parameter
@@ -624,7 +625,10 @@ class RfpForQuotesView(LoginRequiredMixin,View):
         except RFPList.DoesNotExist:
             raise Http404("No RFPs found")
 
-        return render(request, 'rfp_for_quotes.html', {'rfps': rfps})
+        return render(request, 'rfp_for_quotes.html', {'rfps': rfps, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps})
+
+
+
 
 
 def send_emails(subject, body, sender, recipients, password):
@@ -902,3 +906,31 @@ def export_quotations(request, rfp_id):
 
     return response
 
+from django.contrib.auth.decorators import login_required
+
+from django.http import JsonResponse
+
+@login_required
+def select_winner(request, id, quotes_id):
+    # Fetch the quote and RFP based on IDs
+    quote = get_object_or_404(Quotes, pk=quotes_id)
+    rfp = get_object_or_404(RFPList, pk=id)
+
+    # Check if the quote belongs to the specified RFP
+    if quote.rfp != rfp:
+        # Quote does not belong to the specified RFP, handle the error as needed
+        return JsonResponse({'error': 'Quote does not belong to the specified RFP'})
+
+    # Check if any other quote associated with this RFP already has a winner
+    quotes_to_update = Quotes.objects.filter(rfp=rfp, winner__isnull=True)
+
+    if quotes_to_update:
+        # Update the winner field for all quotes associated with this RFP
+        winner_user = quote.vendor.user
+        quotes_to_update.update(winner=winner_user)
+
+        # Return the winner's name
+        return JsonResponse({'winner_name': winner_user.username})
+    else:
+        # All quotes associated with this RFP already have winners, handle the error as needed
+        return JsonResponse({'error': 'All quotes from this RFP already have winners'})

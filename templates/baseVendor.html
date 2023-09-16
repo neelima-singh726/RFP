@@ -5,7 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Page Title</title>
     <style>
-        /* Styling for the two sections */
+        .won-rfp {
+            background-color: #b3ffb3; 
+        }
+    
+        .sparkles {
+           
+            background-image: radial-gradient(circle, #fff 20%, transparent 20%),
+                                radial-gradient(circle, #fff 20%, transparent 20%);
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+            animation: sparkles 1s linear infinite;
+        }
+    
+        @keyframes sparkles {
+            0% {
+                background-position: 0 0, 10px 10px;
+            }
+            100% {
+                background-position: 20px 0, 30px 10px;
+            }
+        }
         .section-1 {
             background-color: #332D2D;
             width: 20%;

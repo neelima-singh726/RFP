@@ -61,10 +61,6 @@ class Admin(models.Model):
 
 
 
-
-
-
-
 class RFPList(models.Model):
     id = models.AutoField(primary_key=True)
     rfp_title = models.CharField(max_length=255)
@@ -89,6 +85,7 @@ class RFPList(models.Model):
 
 class Quotes(models.Model):
     quotes_id = models.AutoField(primary_key=True)
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     item_name = models.CharField(max_length=120)
     item_desc = models.TextField()
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='quotes')

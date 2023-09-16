@@ -19,6 +19,7 @@
                 <th>Vendor Price</th> 
                 <th>Quantity</th> 
                 <th>Total Price</th>
+                <th>Winner</th>
             </tr>
         </thead>
         <tbody>
@@ -31,6 +32,13 @@
                     <td>{{ quote.vendor_price }}</td>
                     <td>{{ quote.quantity }}</td>
                     <td>{{ quote.total_price }}</td>
+                    <td>
+                        {% if not quote.winner %}
+                            <a href="{% url 'select_winner' quote.rfp.id quote.quotes_id %}" class="btn btn-success">Select Winner</a>
+                        {% else %}
+                             {{ quote.winner }}
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -53,6 +61,45 @@
             {% endif %}
         </span>
     </div>
+    <!-- Import jQuery library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Add the JavaScript code within your HTML file or in a separate .js file -->
+<script>
+    $(document).ready(function () {
+        // Handle "Select Winner" link clicks
+        $(".select-winner").click(function (event) {
+            event.preventDefault();
+
+            // Get the RFP ID and Quote ID from the URL (from the link's href attribute)
+            var url = $(this).attr("href");
+            var rfpId = url.split("/")[3]; // Assuming the RFP ID is at the 4th position in the URL
+            var quoteId = url.split("/")[4]; // Assuming the Quote ID is at the 5th position in the URL
+
+            // Disable all "Select Winner" links for the same RFP
+            $(".select-winner[data-rfp-id='" + rfpId + "']").addClass("disabled");
+
+            // Make an AJAX request to select the winner (modify this as needed)
+            $.ajax({
+                type: "POST",
+                url: `/select_winner/${rfpId}/${quoteId}/`, // Use template literals to construct the URL
+                data: {
+                    'rfp_id': rfpId,
+                    'quote_id': quoteId
+                },
+                success: function (response) {
+                    // Update the link text with the winner's name (response data)
+                    $(".select-winner[data-quote-id='" + quoteId + "']").text(response.winner_name);
+                },
+                error: function (xhr, errmsg, err) {
+                    // Handle errors if the AJAX request fails
+                    console.log(errmsg);
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock %}
 
 

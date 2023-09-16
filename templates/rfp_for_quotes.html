@@ -9,8 +9,8 @@
 {% block section2 %}
 <div>
     <h3>RFP List</h3>
-  </div>
-  <div class="bs-example">
+</div>
+<div class="bs-example">
     <br>
     <table class="table table-bordered table-striped">
         <thead>
@@ -26,7 +26,7 @@
         </thead>
         <tbody>
             {% for rfp in rfps %}
-            <tr>
+            <tr {% if rfp in won_rfps %}class="won-rfp"{% endif %}>
                 <td>{{ rfp.id }}</td>
                 <td>{{ rfp.rfp_title }}</td>
                 <td>{{ rfp.last_date }}</td>
@@ -35,14 +35,21 @@
                 <td>
                     <div class="status-box">
                         <div class="status-cell {% if rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
-                            {{ rfp.status|capfirst }} 
+                            {{ rfp.status|capfirst }}
                         </div>
                     </div>
                 </td>
                 <td>
-                    {% if rfp.status == 'open' %}
-                          
-                    <a href="{% url 'apply-for-quote' rfp.id  %}" class="action-link approve-link" data-status="Approved"><I><Strong><h4>Apply</h4></Strong></I></a>
+                    {% if rfp.id in applied_rfps %}
+                       {% if rfp in won_rfps%}
+                           you won!
+                        {% else %}
+                           Applied
+                        {%endif%}
+                    {% elif rfp.status == 'open' %}
+                        <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
+                            <strong><h4>Apply</h4></strong>
+                        </a>
                     {% endif %}
                 </td>
             </tr>
@@ -67,7 +74,28 @@
             {% endif %}
         </span>
     </div>
+</div>
+<style>
+    .won-rfp {
+        background-color: #b3ffb3; 
+    }
+
+    .sparkles {
+       
+        background-image: radial-gradient(circle, #fff 20%, transparent 20%),
+                            radial-gradient(circle, #fff 20%, transparent 20%);
+        background-position: 0 0, 10px 10px;
+        background-size: 20px 20px;
+        animation: sparkles 1s linear infinite;
+    }
+
+    @keyframes sparkles {
+        0% {
+            background-position: 0 0, 10px 10px;
+        }
+        100% {
+            background-position: 20px 0, 30px 10px;
+        }
+    }
+</style>
 {% endblock %}
-
-
-
