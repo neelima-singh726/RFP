@@ -20,6 +20,7 @@
                 <th>Max Amount</th>
                 <th>Status</th>
                 <th>Action</th>
+                <th>Convert to</th>
             </tr>
         </thead>
         <tbody>
@@ -44,6 +45,11 @@
                         <a href="{% url 'rfp-close' rfp.id %}" class="action-link reject-link red link" data-status="Rejected"><I>Close</I></a>
                     {% endif %}
                     </td>
+                <td>
+                    <a href="{% url 'export_quotations' rfp.id %}" class="btn btn-primary" download>CSV</a>
+
+
+                </td>
             </tr>
             {% endfor %}
         </tbody>

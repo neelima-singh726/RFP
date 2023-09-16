@@ -410,7 +410,6 @@ def approve(request, vendor_id):
         subject = 'Status Approved'
         body = f"Hi! your status has been approved."
         
-        # Get the list of user emails (assuming you have a `User` model with an `email` field)
         user_emails = Vendor.objects.select_related(
         'user'
         ).values_list(
@@ -880,3 +879,26 @@ class CreateCategoryView(CreateView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)  
         return response
+
+import csv
+from django.http import HttpResponse
+from .models import Quotes  
+
+def export_quotations(request, rfp_id):
+    # Fetch quotations for the specified RFP
+    quotations = Quotes.objects.filter(rfp_id=rfp_id)
+
+    # Create a response object with the appropriate content type for CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="quotations_{rfp_id}.csv"'
+
+    # Create a CSV writer and write the header row
+    writer = csv.writer(response)
+    writer.writerow(['Vendor', 'Vendor Price', 'Item Description', 'Quantity', 'Total Price'])
+
+    # Write the quotation data
+    for quote in quotations:
+        writer.writerow([quote.vendor.user.username, quote.vendor_price, quote.item_desc, quote.quantity, quote.total_price])
+
+    return response
+

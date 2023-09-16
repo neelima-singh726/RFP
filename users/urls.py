@@ -27,6 +27,7 @@ urlpatterns = [
     path('activate/<int:category_id>/', views.activate, name='activate'),
     path('deactivate/<int:category_id>/', views.deactivate, name='deactivate'),
     path('create-category/', views.CreateCategoryView.as_view(), name='create-category'),
-    
+    path('export_quotations/<int:rfp_id>/', views.export_quotations, name='export_quotations'),
+
 
 ]
