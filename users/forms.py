@@ -85,3 +85,6 @@ class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ['c_name','c_status'] 
+
+class AdminCommentsForm(forms.Form):
+    comments = forms.CharField(widget=forms.Textarea)

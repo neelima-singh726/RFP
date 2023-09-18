@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Request Quote Again</h1>
+    <p>RFP Title: {{ quote.rfp.rfp_title }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Request Quote Again</button>
+    </form>
+    <h2>Admin Comments</h2>
+    <p>{{ quote.admin_comments }}</p>
+{% endblock %}

@@ -22,35 +22,58 @@
                 <th>Max Amount</th>
                 <th>Status</th>
                 <th>Action</th>
+                <th>Admin Comments</th> <!-- Add a column for Admin Comments -->
             </tr>
         </thead>
         <tbody>
-            {% for rfp in rfps %}
-            <tr {% if rfp in won_rfps %}class="won-rfp"{% endif %}>
-                <td>{{ rfp.id }}</td>
-                <td>{{ rfp.rfp_title }}</td>
-                <td>{{ rfp.last_date }}</td>
-                <td>{{ rfp.min_amount }}</td>
-                <td>{{ rfp.max_amount }}</td>
+            {% for quote in quotes %}
+            <tr {% if quote.rfp in won_rfps %}class="won-rfp"{% endif %}>
+                <td>{{ quote.rfp.id }}</td>
+                <td>{{ quote.rfp.rfp_title }}</td>
+                <td>{{ quote.rfp.last_date }}</td>
+                <td>{{ quote.rfp.min_amount }}</td>
+                <td>{{ quote.rfp.max_amount }}</td>
                 <td>
                     <div class="status-box">
-                        <div class="status-cell {% if rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
-                            {{ rfp.status|capfirst }}
+                        <div class="status-cell {% if quote.rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
+                            {{ quote.rfp.status|capfirst }}
                         </div>
                     </div>
                 </td>
                 <td>
-                    {% if rfp.id in applied_rfps %}
-                       {% if rfp in won_rfps%}
-                           you won!
+                    {% if quote.rfp.id in applied_rfps %}
+                        {% if quote.rfp in won_rfps %}
+                            you won!
                         {% else %}
-                           Applied
-                        {%endif%}
-                    {% elif rfp.status == 'open' %}
-                        <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
-                            <strong><h4>Apply</h4></strong>
-                        </a>
+                            Applied
+                        {% endif %}
+                       
+                    {%else%}
+                    <a href="{% url 'apply-for-quote' quote.rfp.id %}" class="action-link approve-link" data-status="Approved">
+                        <strong><h4>Apply</h4></strong>
+                    </a>
+                    {%endif%}
+                </td>
+                
+    
+                <td>
+                    {% if quote.updated == False%}
+                    {% if quote.vendor.user == request.user %}
+                        {% with comments=quote.admin_comments %}
+                            {% if comments %}
+                                <ul>
+                                    <li>Admin Comments: {{ comments }}</li>
+                                </ul>
+                                    <!-- Comments exist, enable apply button -->
+                                    <a href="{% url 'apply-for-quote-again' quote.quotes_id quote.rfp.id %}" class="action-link approve-link" data-status="Approved">
+                                        <strong><h4>Apply</h4></strong>
+                                    </a>
+                               
+                            {% endif %}
+                        {% endwith %}
                     {% endif %}
+                {%endif%}
+
                 </td>
             </tr>
             {% endfor %}
@@ -58,19 +81,19 @@
     </table>
     <div class="pagination">
         <span class="step-links">
-            {% if rfps.has_previous %}
+            {% if quotes.has_previous %}
                 <a href="?page=1">&laquo;</a> <!-- First page -->
-                <a href="?page={{ rfps.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
+                <a href="?page={{ quotes.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
             {% endif %}
             
             <!-- Display a fixed number of page numbers -->
-            {% for page_num in rfps.paginator.page_range %}
-                <a href="?page={{ page_num }}" {% if page_num == rfps.number %}class="current-page"{% endif %}>{{ page_num }}</a>
+            {% for page_num in quotes.paginator.page_range %}
+                <a href="?page={{ page_num }}" {% if page_num == quotes.number %}class="current-page"{% endif %}>{{ page_num }}</a>
             {% endfor %}
     
-            {% if rfps.has_next %}
-                <a href="?page={{ rfps.next_page_number }}">&rsaquo;</a> <!-- Next page -->
-                <a href="?page={{ rfps.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
+            {% if quotes.has_next %}
+                <a href="?page={{ quotes.next_page_number }}">&rsaquo;</a> <!-- Next page -->
+                <a href="?page={{ quotes.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
             {% endif %}
         </span>
     </div>
@@ -78,24 +101,6 @@
 <style>
     .won-rfp {
         background-color: #b3ffb3; 
-    }
-
-    .sparkles {
-       
-        background-image: radial-gradient(circle, #fff 20%, transparent 20%),
-                            radial-gradient(circle, #fff 20%, transparent 20%);
-        background-position: 0 0, 10px 10px;
-        background-size: 20px 20px;
-        animation: sparkles 1s linear infinite;
-    }
-
-    @keyframes sparkles {
-        0% {
-            background-position: 0 0, 10px 10px;
-        }
-        100% {
-            background-position: 20px 0, 30px 10px;
-        }
     }
 </style>
 {% endblock %}

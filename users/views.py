@@ -1,10 +1,11 @@
 import random
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse, reverse_lazy
 from django.views import View
+from requests import Response
 from rfp_project.settings import EMAIL, PSWD
 from users.forms import LoginForm, QuotesForm, RegisterForm, RegisterFormVendor, RfpListForm
 from django.utils.decorators import method_decorator
@@ -602,13 +603,14 @@ from django.db.models import Exists, OuterRef
 
 
 from django.db.models import OuterRef, Subquery
+
 class RfpForQuotesView(LoginRequiredMixin, View):
     """View for vendors to quote RFPs."""
 
     def get(self, request):
         try:
             # Get the list of RFPs
-            rfps = RFPList.objects.all()
+            quotes = Quotes.objects.filter(vendor_id=request.user.id)
 
             # Get the list of RFPs where the vendor is the winner
             won_rfps = RFPList.objects.filter(quotes__winner=request.user).distinct()
@@ -619,13 +621,107 @@ class RfpForQuotesView(LoginRequiredMixin, View):
                 applied=True
             ).values_list('rfp_id', flat=True)
 
-            paginator = Paginator(rfps, 5)  # 5 RFPs per page
+            # Create a dictionary with RFP IDs as keys and associated quotes with comments as values
+           
+            paginator = Paginator(quotes, 5)  # 5 RFPs per page
             page = request.GET.get('page')  # Get the current page number from the URL parameter
-            rfps = paginator.get_page(page)
-        except RFPList.DoesNotExist:
+            quotes = paginator.get_page(page)
+        except Quotes.DoesNotExist:
             raise Http404("No RFPs found")
 
-        return render(request, 'rfp_for_quotes.html', {'rfps': rfps, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps})
+        return render(
+            request,
+            'rfp_for_quotes.html',
+            {'quotes': quotes, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps}
+        )
+from django.views.generic.edit import UpdateView
+
+class UpdateRFpForQuoteView(UpdateView):
+    """Class-based view for updating an existing Request for Proposal (RFP) for quotes.
+
+    Args:
+        UpdateView (class): The base class for Django class-based views.
+
+    Attributes:
+        model (class): The model associated with the view (Quotes in this case).
+        fields (list): The fields of the model that should be displayed in the form.
+        template_name (str): The name of the template to use for the update view.
+        success_url (str): The URL to redirect to after a successful form submission.
+    """
+    model = Quotes
+    fields = ['vendor_price', 'item_desc', 'quantity', 'total_price'] 
+    # template_name = 'quotes_form.html'  # Create an HTML template for the update form
+    success_url = reverse_lazy('rfp-for-quotes')  # Redirect to rfp-list URL after successful form submission
+
+    def get_object(self, queryset=None):
+        # Retrieve the existing quote based on quote_id
+        quote_id = self.kwargs.get('quotes_id')
+        return get_object_or_404(Quotes, quotes_id=quote_id)
+
+    def form_valid(self, form):
+        # Get the existing quote object
+        quote = self.get_object()
+       
+
+        # Perform any additional logic when the form is valid
+        # For example, you can update additional fields or perform other actions
+        # In this case, you can update the fields based on the form data
+        quote.vendor_price = form.cleaned_data['vendor_price']
+        quote.item_desc = form.cleaned_data['item_desc']
+        quote.quantity = form.cleaned_data['quantity']
+        quote.total_price = form.cleaned_data['total_price']
+        quote.updated = True
+
+    # Save the updated quote with commit=False
+       
+        quote.save()
+
+    # Redirect to the success URL
+        super().form_valid(form)
+
+    # Explicitly save the changes to the database
+        quote.updated = True
+        quote.save()
+        messages.success(self.request, 'Quote updated successfully.')
+
+        # Prepare the email subject and body
+        subject = 'New RFP Quote Added considering your commnet'
+        body = f"A new RFP has been added. Check it out!"
+        
+        # Get the list of user emails (assuming you have a `User` model with an `email` field)
+        
+        
+        # user_emails = Vendor.objects.values_list('email', flat=True)
+        
+        rfp = quote.rfp
+
+# Get the user associated with the created_by_id of the RFP
+        user = rfp.created_by
+
+# Get the email address of the user
+        user_email = user.email
+        recipients = [user_email]
+        
+        try:
+            # Send the email
+            send_emails(subject, body,EMAIL, recipients,PSWD)
+            
+        except Exception as e:
+            # Handle email sending errors here
+            # You can log the error or take appropriate action
+            return JsonResponse({'success': False, 'error': str(e)})
+        
+        return HttpResponseRedirect(self.success_url)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -934,3 +1030,39 @@ def select_winner(request, id, quotes_id):
     else:
         # All quotes associated with this RFP already have winners, handle the error as needed
         return JsonResponse({'error': 'All quotes from this RFP already have winners'})
+
+from .forms import AdminCommentsForm
+
+@login_required
+def request_quote(request, id, quotes_id):
+    # Fetch the quote and RFP based on IDs
+    quote = get_object_or_404(Quotes, pk=quotes_id)
+    rfp = get_object_or_404(RFPList, pk=id)
+
+    if request.method == 'POST':
+        form = AdminCommentsForm(request.POST)
+        if form.is_valid():
+            comments = form.cleaned_data['comments']
+            # Save the comments in the Quotes model
+            quote.admin_comments = comments
+            quote.save()
+            vendor = quote.vendor
+            user = vendor.user
+            user_email = user.email   
+            recipients = [user_email]
+            subject = "Comments Added by admin on your quote"
+            body = "recreate the rfp quote, addressing the comments "
+            try:
+            # Send the email
+               send_emails(subject, body,EMAIL, recipients,PSWD)
+            
+            except Exception as e:
+            
+                return JsonResponse({'success': False, 'error': str(e)})
+            return redirect('rfp-quotes')
+    else:
+        form = AdminCommentsForm()
+
+    return render(request, 'request_quote.html', {'form': form, 'quote': quote})
+  
+    

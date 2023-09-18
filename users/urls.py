@@ -29,6 +29,9 @@ urlpatterns = [
     path('create-category/', views.CreateCategoryView.as_view(), name='create-category'),
     path('export_quotations/<int:rfp_id>/', views.export_quotations, name='export_quotations'),
     path('select_winner/<int:id>/<int:quotes_id>/', views.select_winner, name='select_winner'),
+    path('request_quote/<int:id>/<int:quotes_id>/', views.request_quote, name='request_quote'),
+    path('apply-for-quote-again/<int:quotes_id>/<int:rfp_id>/', views.UpdateRFpForQuoteView.as_view(), name='apply-for-quote-again'),
+
 
 
 ]

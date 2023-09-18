@@ -85,6 +85,7 @@ class RFPList(models.Model):
 
 class Quotes(models.Model):
     quotes_id = models.AutoField(primary_key=True)
+    admin_comments = models.TextField(blank=True, null=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     item_name = models.CharField(max_length=120)
     item_desc = models.TextField()
@@ -94,6 +95,7 @@ class Quotes(models.Model):
     total_price = models.FloatField()
     rfp = models.ForeignKey(RFPList, on_delete=models.CASCADE, related_name='quotes')
     applied = models.BooleanField(default=False)
+    updated = models.BooleanField(default=False)
     created_date = models.DateTimeField(default=timezone.now)
     class Meta:
         ordering = ['-created_date']
