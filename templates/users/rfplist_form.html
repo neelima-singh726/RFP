@@ -1,6 +1,6 @@
-{% extends "base.html" %} <!-- Extend your base template if you have one -->
+{% extends "baseAdmin.html" %}
 
-{% block content %}
+{% block section2 %}
   <div class="container">
     <h2>Create RFP</h2>
     <form method="post">
@@ -9,4 +9,18 @@
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
   </div>
+  
+  <script>
+    // Wait for the document to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get the last_date input element by its ID
+      const lastDateInput = document.getElementById('id_last_date');
+      
+      // Check if the input element exists
+      if (lastDateInput) {
+        // Set its type to 'date' to enable the calendar
+        lastDateInput.type = 'date';
+      }
+    });
+  </script>
 {% endblock %}

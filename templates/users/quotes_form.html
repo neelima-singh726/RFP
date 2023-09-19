@@ -1,16 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Apply for RFP</title>
-</head>
-<body>
-    <div class="container">
-        <h3>Apply for RFP - {{ rfp.rfp_title }}</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
-</body>
-</html>
+{% extends "baseVendor.html" %} <!-- Extend your base template if you have one -->
+
+{% block section2 %}
+<div class="container">
+    <h3>Apply for RFP - {{ rfp.rfp_title }}</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}
+
+

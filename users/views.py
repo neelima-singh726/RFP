@@ -93,7 +93,23 @@ class SignInView(View):
                     if user.is_admin:
                         return redirect('home-admin')
                     elif user.is_vendor:
-                        return redirect('home-vendor')
+                        try:
+                            vendor = Vendor.objects.get(user=user)
+                            if vendor.v_status == 'approve':
+                                return redirect('home-vendor')
+                            else:
+                                # Vendor is not approved, display a message and log them out
+                                messages.error(request, 'Vendor not approved.')
+                                logout(request)
+                                return redirect('login')
+                        except Vendor.DoesNotExist:
+                            # Handle the case where there's no associated vendor
+                            messages.error(request, 'No associated vendor found.')
+                            logout(request)
+                            return redirect('login')
+                    else:
+                        # Handle other user types as needed
+                        return redirect('home')
                     
             messages.error(request, 'Invalid username or password')
             return render(request, 'login.html', {'form': form})
@@ -197,7 +213,7 @@ class SignUpView(CreateView):
 
 class SignUpVendorView(CreateView):
     template_name = 'registerVendor.html'
-    success_url = reverse_lazy('home-vendor')
+    success_url = reverse_lazy('login')
     form_class = RegisterFormVendor
 
     def get(self, request):
@@ -260,6 +276,8 @@ class SignUpVendorView(CreateView):
                 login(request, user)
                 email_sender_view = SendEmailView()
                 response = email_sender_view.send_email(user.email)
+                messages.success(request, 'Vendor Registered successfully!')
+
                 return redirect(self.success_url)
             else:
                 return render(request, self.template_name, {'form': form})
@@ -761,7 +779,8 @@ def send_emails(subject, body, sender, recipients, password):
         # You can log the error or take appropriate action
         print(f"Error sending email: {str(e)}")
 
-
+from django import forms
+from django.utils import timezone
 class CreateRfpView(CreateView):
     """Class-based view for creating a new Request for Proposal (RFP).
 
@@ -778,14 +797,11 @@ class CreateRfpView(CreateView):
     model = RFPList
     fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','category'] 
     success_url = reverse_lazy('rfp-list')  # Redirect to rfp-list URL after successful form submission
-
+    
     def get(self, request, *args, **kwargs):
         # Display the form for GET requests
         return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)  
-        return response
+    
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         # Filter the queryset for the 'category' field to show only active categories
@@ -793,6 +809,11 @@ class CreateRfpView(CreateView):
         return form
         
     def form_valid(self, form):
+        last_date = form.cleaned_data['last_date']
+        if last_date < timezone.now().date():
+            # Raise a validation error if the date is in the past
+            form.add_error('last_date', "Last date should be greater than or equal to today's date.")
+            return self.form_invalid(form)
         form.instance.created_by_id = self.request.user.id
         # Save the form data and then send the email
         response = super().form_valid(form)
@@ -822,6 +843,9 @@ class CreateRfpView(CreateView):
             # Handle email sending errors here
             # You can log the error or take appropriate action
             return JsonResponse({'success': False, 'error': str(e)})
+        
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
         
 class CreateRFpForQuoteView(CreateView):
     """Class-based view for creating a new Request for Proposal (RFP) for quotes.
@@ -899,20 +923,47 @@ class CreateRFpForQuoteView(CreateView):
         # Render the template with the context and return the response
         return render(self.request, 'rfp_for_quotes.html', context)
         
+import time
 
-def reset_password(request, uidb64, token):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        new_password = data.get('new_password')
+def reset_password(request, uidb64, token, timestamp):
+    """View for resetting a user's password.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        uidb64 (str): The base64-encoded user ID.
+        token (str): The password reset token.
+        timestamp (str): The timestamp when the reset link was generated.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
+        # Convert the timestamp to an integer
+    timestamp = int(timestamp)
         
+        # Calculate the elapsed time since the link was generated
+    current_time = int(time.time())
+    elapsed_time = current_time - timestamp
+        
+        # Check if the link has expired (e.g., 60 seconds)
+    expiration_time = 60  # Adjust as needed
+    if elapsed_time > expiration_time:
+        return render(request, 'password_reset_timeout.html')
+        
+    if request.method == 'POST':
+        new_password = request.POST.get('newPassword')
+            
         try:
             uid = urlsafe_b64decode(uidb64).decode('utf-8')
             user = User.objects.get(pk=uid)
-            
+                
             if default_token_generator.check_token(user, token):
                 user.set_password(new_password)
                 user.save()
-                return JsonResponse({'success': True})
+                # Add a success message
+                messages.success(request, 'Password reset successful. You can now log in with your new password.')
+                
+                # Redirect to the login page
+                return redirect('login') 
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid token'})
         except Exception as e:
@@ -920,10 +971,29 @@ def reset_password(request, uidb64, token):
     
     return render(request, 'reset_password.html', {'uidb64': uidb64, 'token': token})
 
+
+
 def forgot_password(request):
+    """View for displaying the forgot password page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     return render(request, 'forgot_password.html')
 
+
 def send_reset_email(request):
+    """View for sending a password reset email.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response indicating success or failure.
+    """
     if request.method == 'POST':
         data = json.loads(request.body)
         email = data.get('email')
@@ -932,7 +1002,8 @@ def send_reset_email(request):
                 user = User.objects.get(email=email)
                 token = default_token_generator.make_token(user)
                 uidb64 = urlsafe_b64encode(force_bytes(user.pk))
-                reset_link = f"http://127.0.0.1:8000/reset/{uidb64.decode()}/{token}/"      
+                timestamp = int(time.time())  # Get the current timestamp
+                reset_link = f"http://127.0.0.1:8000/reset/{uidb64.decode()}/{token}/{timestamp}/"      
                 subject = "Reset Password"
                 body = f"Click the following link to reset your password: {reset_link}"
                 sender = EMAIL
@@ -945,6 +1016,7 @@ def send_reset_email(request):
             except Exception as e:
                 return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False})
+
 
 
 

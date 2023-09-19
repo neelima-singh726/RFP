@@ -69,10 +69,14 @@ class RegisterFormVendor(UserCreationForm):
 
         return user
 
+
 class RfpListForm(forms.ModelForm):
     class Meta:
         model = RFPList
         fields = ['rfp_title', 'item_desc', 'last_date', 'min_amount', 'max_amount','category']
+
+    
+        
    
 from .models import Admin, Quotes
 
