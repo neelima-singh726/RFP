@@ -2,7 +2,6 @@
 
 {% block title %}Catgories{% endblock %}
 
-
 {% block section2 %}
 <div>
     <h3>Category</h3>
@@ -10,7 +9,7 @@
   <div class="bs-example">
     <a href="{% url 'create-category' %}" class= "btn btn-success add-rfp-button" >+Add Category</a>
     <br>
-    <table class="table table-bordered table-striped">
+    <table id="categoryTable" class="display">
         <thead>
             <tr>
                 <th>Sr no.</th>
@@ -27,7 +26,7 @@
                 <td>
                     <div class="status-box">
                         <div class="status-cell {% if cat.c_status == 'active' %}status-green{% else %}status-red{% endif %}">
-                            {{ cat.c_status|capfirst }} <!-- Display the status -->
+                            {{ cat.c_status|capfirst }}
                         </div>
                     </div>
                 </td>
@@ -37,31 +36,44 @@
                     {%else%}
                         <a href="{% url 'activate' cat.category_id %}" class="action-link approve-link green link" ><I><strong>Activate</strong></I></a>
                     {% endif %}
-                    </td>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th data-column-index="0"></th>
+                <th data-column-index="1"><input type="text" placeholder="Search Category Name" /></th>
+                <th data-column-index="2"><input type="text" placeholder="Search Status" /></th>
+                <th data-column-index="3"></th>
+            </tr>
+        </tfoot>
+        
     </table>
-    <div class="pagination">
-        <span class="step-links">
-            {% if category.has_previous %}
-                <a href="?page=1">&laquo;</a> <!-- First page -->
-                <a href="?page={{ category.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
-            {% endif %}
-            
-            <!-- Display a fixed number of page numbers -->
-            {% for page_num in category.paginator.page_range %}
-                <a href="?page={{ page_num }}" {% if page_num == category.number %}class="current-page"{% endif %}>{{ page_num }}</a>
-            {% endfor %}
     
-            {% if category.has_next %}
-                <a href="?page={{ category.next_page_number }}">&rsaquo;</a> <!-- Next page -->
-                <a href="?page={{ category.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
-            {% endif %}
-        </span>
-    </div>
 {% endblock %}
-
+{%block script%}
+<script>
+    $(document).ready(function() {
+        var table = $('#categoryTable').DataTable({
+            "pagingType": "full_numbers",
+            "searching": true,
+            "ordering": true,
+            "order": [],  // Initial sorting order (empty to disable initial sorting)
+            "columnDefs": [  // Enable sorting on specific columns
+                { "orderable": false, "targets": [0, 3] }  // Disable sorting on columns 0 and 3
+            ]
+        });
+    
+        // Apply the search functionality to the footer inputs
+        $('#categoryTable tfoot th input').on('keyup change', function() {
+            var index = $(this).parent().index();  // Get the column index from the table cell
+            table.column(index).search(this.value).draw();
+        });
+    });
+    
+</script>
+{%endblock%}
 
 
 

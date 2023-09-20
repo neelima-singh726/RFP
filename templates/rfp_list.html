@@ -8,9 +8,9 @@
     <h3>RFP List</h3>
   </div>
   <div class="bs-example">
-    <a href="{% url 'create-rfp' %}" class= "btn btn-success add-rfp-button" >+Add RFP</a>
+    <a href="{% url 'select_category' %}" class= "btn btn-success add-rfp-button" >+Add RFP</a>
     <br>
-    <table class="table table-bordered table-striped">
+    <table id="rfptable" class="display">
         <thead>
             <tr>
                 <th>RFP no.</th>
@@ -53,6 +53,20 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th data-column-index="0"></th>
+                <th data-column-index="1"><input type="text" placeholder="Title" /></th>
+                <th data-column-index="2"><input type="text" placeholder="Last Date" /></th>
+                <th data-column-index="3"><input type="text" placeholder="Min amount" /></th>
+                <th data-column-index="4"><input type="text" placeholder="Max amount" /></th>
+                <th data-column-index="5"><input type="text" placeholder="status" /></th>
+                <th data-column-index="6"></th>
+                <th data-column-index="7"></th>
+
+
+            </tr>
+        </tfoot>
     </table>
     <div class="pagination">
         <span class="step-links">
@@ -75,7 +89,28 @@
 {% endblock %}
 
 
-
+{%block script%}
+<script>
+    $(document).ready(function() {
+        var table = $('#rfptable').DataTable({
+            "pagingType": "full_numbers",
+            "searching": true,
+            "ordering": true,
+            "order": [],  // Initial sorting order (empty to disable initial sorting)
+            "columnDefs": [  // Enable sorting on specific columns
+                { "orderable": false, "targets": [0, 7] }  // Disable sorting on columns 0 and 3
+            ]
+        });
+    
+        // Apply the search functionality to the footer inputs
+        $('#rfptable tfoot th input').on('keyup change', function() {
+            var index = $(this).parent().index();  // Get the column index from the table cell
+            table.column(index).search(this.value).draw();
+        });
+    });
+    
+</script>
+{%endblock%}
 
 
 

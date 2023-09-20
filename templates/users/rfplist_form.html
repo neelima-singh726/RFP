@@ -5,12 +5,44 @@
     <h2>Create RFP</h2>
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
+      <div class="form-group">
+        <label for="{{ form.rfp_title.id_for_label }}">rfp_title:</label>
+        {{ form.rfp_title }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.item_desc.id_for_label }}">item_desc :</label>
+        {{ form.item_desc }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.last_date.id_for_label }}">last_date:</label>
+        {{ form.last_date }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.min_amount.id_for_label }}">min_amount:</label>
+      {{ form.min_amount }}
+  </div>
+  <div class="form-group">
+    <label for="{{ form.max_amount.id_for_label }}">max_amount:</label>
+    {{ form.max_amount }}
+  </div>
+ 
+  <div class="form-group">
+    <label for="{{ form.vendors.id_for_label }}">vendors:</label>
+    <select id="{{ form.vendors.id_for_label }}" name="{{ form.vendors.name }}" multiple style="width: 300px;">
+        {% for vendor in form.vendors.field.queryset %}
+            <option value="{{ vendor.pk }}">{{ vendor }}</option>
+        {% endfor %}
+    </select>
+</div>
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
   </div>
   
   <script>
+    $(document).ready(function() {
+      $('#{{ form.vendors.id_for_label }}').select2();
+  });
+   
     // Wait for the document to be ready
     document.addEventListener('DOMContentLoaded', function() {
       // Get the last_date input element by its ID

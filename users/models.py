@@ -51,6 +51,9 @@ class Vendor(models.Model):
     
     class Meta:
         ordering = ['-created_date']
+    
+    def __str__(self):
+        return self.user.get_full_name() 
 
 class Admin(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)

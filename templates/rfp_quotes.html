@@ -9,7 +9,7 @@
   </div>
   <div class="bs-example">
     <br>
-    <table class="table table-bordered table-striped">
+    <table id="rfptable" class="display">
         <thead>
             <tr>
                 <th>Serial no.</th> 
@@ -48,29 +48,23 @@
                 </tr>
             {% endfor %}
         </tbody>
-    </table>
-    <div class="pagination">
-        <span class="step-links">
-            {% if quotes.has_previous %}
-                <a href="?page=1">&laquo;</a> <!-- First page -->
-                <a href="?page={{ quotes.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
-            {% endif %}
-            
-            <!-- Display a fixed number of page numbers -->
-            {% for page_num in quotes.paginator.page_range %}
-                <a href="?page={{ page_num }}" {% if page_num == quotes.number %}class="current-page"{% endif %}>{{ page_num }}</a>
-            {% endfor %}
-    
-            {% if quotes.has_next %}
-                <a href="?page={{ quotes.next_page_number }}">&rsaquo;</a> <!-- Next page -->
-                <a href="?page={{ quotes.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
-            {% endif %}
-        </span>
-    </div>
-    <!-- Import jQuery library -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <tfoot>
+            <tr>
+                <th data-column-index="0"></th>
+                <th data-column-index="1"><input type="text" placeholder="rfp no" /></th>
+                <th data-column-index="2"><input type="text" placeholder="Item name" /></th>
+                <th data-column-index="3"><input type="text" placeholder="Vendor Id" /></th>
+                <th data-column-index="4"><input type="text" placeholder="Vendor Price" /></th>
+                <th data-column-index="5"><input type="text" placeholder="Quantity" /></th>
+                <th data-column-index="6"><input type="text" placeholder="Price" /></th>
+                <th data-column-index="7"></th>
+                <th data-column-index="8"></th>
 
-<!-- Add the JavaScript code within your HTML file or in a separate .js file -->
+
+
+            </tr>
+        </tfoot>
+    </table>
 <script>
     $(document).ready(function () {
         // Handle "Select Winner" link clicks
@@ -110,5 +104,26 @@
 
 
 
-
+{%block script%}
+<script>
+    $(document).ready(function() {
+        var table = $('#rfptable').DataTable({
+            "pagingType": "full_numbers",
+            "searching": true,
+            "ordering": true,
+            "order": [],  // Initial sorting order (empty to disable initial sorting)
+            "columnDefs": [  // Enable sorting on specific columns
+                { "orderable": false, "targets": [0, 7] }  // Disable sorting on columns 0 and 3
+            ]
+        });
+    
+        // Apply the search functionality to the footer inputs
+        $('#rfptable tfoot th input').on('keyup change', function() {
+            var index = $(this).parent().index();  // Get the column index from the table cell
+            table.column(index).search(this.value).draw();
+        });
+    });
+    
+</script>
+{%endblock%}
 

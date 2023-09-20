@@ -8,7 +8,7 @@
     <h3>Vendors List</h3>
 </div>
 <div class="bs-example">
-    <table class="table table-bordered table-striped">
+    <table id="rfptable" class="display">
         <thead>
             <tr>
                 <th>S.no</th>
@@ -47,28 +47,42 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th data-column-index="0"></th>
+                <th data-column-index="1"><input type="text" placeholder="vendor id" /></th>
+                <th data-column-index="2"><input type="text" placeholder="First name" /></th>
+                <th data-column-index="3"><input type="text" placeholder="Last Name" /></th>
+                <th data-column-index="4"><input type="text" placeholder="Email" /></th>
+                <th data-column-index="5"><input type="text" placeholder="Contact" /></th>
+                <th data-column-index="6"><input type="text" placeholder="status" /></th>
+                <th data-column-index="7"></th>
+
+
+            </tr>
+        </tfoot>
     </table>
 </div>
-<div class="pagination">
-    <span class="step-links">
-        {% if vendors.has_previous %}
-            <a href="?page=1">&laquo;</a> <!-- First page -->
-            <a href="?page={{ vendors.previous_page_number }}">&lsaquo;</a> <!-- Previous page -->
-        {% endif %}
-        
-        <!-- Display a fixed number of page numbers -->
-        {% for page_num in vendors.paginator.page_range %}
-            <a href="?page={{ page_num }}" {% if page_num == vendors.number %}class="current-page"{% endif %}>{{ page_num }}</a>
-        {% endfor %}
-
-        {% if vendors.has_next %}
-            <a href="?page={{ vendors.next_page_number }}">&rsaquo;</a> <!-- Next page -->
-            <a href="?page={{ vendors.paginator.num_pages }}">&raquo;</a> <!-- Last page -->
-        {% endif %}
-    </span>
-</div>
 {% endblock %}
-
-
-
-
+{%block script%}
+<script>
+    $(document).ready(function() {
+        var table = $('#rfptable').DataTable({
+            "pagingType": "full_numbers",
+            "searching": true,
+            "ordering": true,
+            "order": [],  // Initial sorting order (empty to disable initial sorting)
+            "columnDefs": [  // Enable sorting on specific columns
+                { "orderable": false, "targets": [0, 7] }  // Disable sorting on columns 0 and 3
+            ]
+        });
+    
+        // Apply the search functionality to the footer inputs
+        $('#rfptable tfoot th input').on('keyup change', function() {
+            var index = $(this).parent().index();  // Get the column index from the table cell
+            table.column(index).search(this.value).draw();
+        });
+    });
+    
+</script>
+{%endblock%}

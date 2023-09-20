@@ -74,11 +74,26 @@ class RegisterFormVendor(UserCreationForm):
 
 
 class RfpListForm(forms.ModelForm):
+    rfp_title = forms.CharField(max_length=255)
+    item_desc = forms.CharField()
+    last_date = forms.DateField()
+    min_amount = forms.FloatField()
+    max_amount = forms.FloatField()
+    vendors = forms.ModelMultipleChoiceField(
+        queryset=Vendor.objects.all(),  # Queryset to fetch all vendors
+        widget=forms.SelectMultiple(attrs={'class': 'select2'}),
+    )
+
     class Meta:
         model = RFPList
-        fields = ['rfp_title', 'item_desc', 'last_date', 'min_amount', 'max_amount','category']
+        fields = ['rfp_title', 'item_desc', 'last_date', 'min_amount', 'max_amount', 'vendors']
 
-    
+class CategorySelectionForm(forms.Form):
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.filter(c_status='active'),
+        label='Select Category'
+    )
+
         
    
 from .models import Admin, Quotes

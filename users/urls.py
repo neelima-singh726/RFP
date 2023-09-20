@@ -21,7 +21,10 @@ urlpatterns = [
     path('vendor-reject/<int:vendor_id>/', views.reject, name='vendor-reject'),
     path('rfp-open/<int:id>/', views.rfpopen, name='rfp-open'),
     path('rfp-close/<int:id>/', views.rfpclose, name='rfp-close'),
-    path('create-rfp/', views.CreateRfpView.as_view(), name='create-rfp'),
+    
+    path('create-rfp/<str:category>/', views.create_rfp, name='create-rfp'),
+    
+    # path('create-rfp/<str:category>/', views.CreateRfpView.as_view(), name='create-rfp'),
     path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote'),
     path('forgot-password/', views.forgot_password, name='forgot-password'),
     path("reset/<uidb64>/<token>/<timestamp>/", views.reset_password, name='reset'),
@@ -35,6 +38,7 @@ urlpatterns = [
 
     path('request_quote/<int:id>/<int:quotes_id>/', views.request_quote, name='request_quote'),
     path('apply-for-quote-again/<int:quotes_id>/<int:rfp_id>/', views.UpdateRFpForQuoteView.as_view(), name='apply-for-quote-again'),
+    path('select_category/', views.CategorySelectionView.as_view(), name='select_category'),
 
 
 

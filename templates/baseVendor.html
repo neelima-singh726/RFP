@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Page Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
     <style>
         .won-rfp {
             background-color: #b3ffb3; 
@@ -188,6 +192,10 @@
             background-color: white ;
             color : grey;
         }
+        #rfptable tfoot th input {
+            width: 100%;
+            box-sizing: border-box; /* Ensure padding and border are included in the width */
+        }
     </style>
 </head>
 <body>
@@ -229,5 +237,8 @@
     {% endfor %}
 </div>
 {% endif %}
+
+{%block script%}
+{%endblock%}
 </body>
 </html>
