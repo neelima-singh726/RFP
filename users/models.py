@@ -46,7 +46,7 @@ class Vendor(models.Model):
         choices=[('approve', 'Approve'), ('reject', 'Reject'),('pending','Pending')],
         default='pending' 
     )
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ManyToManyField(Category)
     created_date = models.DateTimeField(default=timezone.now)
     
     class Meta:
@@ -58,7 +58,6 @@ class Admin(models.Model):
     
     class Meta:
         ordering = ['-created_date']
-
 
 
 class RFPList(models.Model):

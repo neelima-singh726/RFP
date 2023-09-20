@@ -240,7 +240,8 @@ class SignUpVendorView(CreateView):
         user.save()  # Save the user object
 
     # Get the selected category from the form
-        category_id = form.cleaned_data['category'].id
+        category = self.cleaned_data.get('category')
+
         user = User.objects.get(email=email)
     
     # Create a Vendor instance related to the user with a valid category
@@ -250,13 +251,9 @@ class SignUpVendorView(CreateView):
         gst_no=form.cleaned_data['gst_no'],
         phone_no=form.cleaned_data['phone_no'],
         revenue=form.cleaned_data['revenue'],
-        category_id=category_id,  # Assign the valid category ID
         )
-        vendor.save()
-
+        vendor.category.set(category)
         login(self.request, user)
-    # Send email or perform other actions if needed
-
         return super().form_valid(form)
 
     def post(self, request):
@@ -269,10 +266,6 @@ class SignUpVendorView(CreateView):
                     messages.error(request, 'A user with this email address already exists.')
                     return redirect('register-vendor')
                 user = form.save()
-                # user.username = user.username.lower()
-                # user.save()
-                # user.is_superuser = False
-                # user.save()
                 login(request, user)
                 email_sender_view = SendEmailView()
                 response = email_sender_view.send_email(user.email)
@@ -287,54 +280,22 @@ class SignUpVendorView(CreateView):
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('register-vendor')
 
-class SignUp_View(CreateView):
-    model = User
-    form_class = RegisterForm
-    template_name = 'register.html'
+def signup_vendor(request):
+    if request.method == 'POST':
+        form = RegisterFormVendor(request.POST)
+        if form.is_valid():
+            # Save the user instance created by the form
+            user = form.save()
 
-class SignUp_VendorView(View):
-    """View for user sign up.
+            # Create the Vendor instance related to the user
+            
+            # Redirect to a success page or login page
+            return redirect('login')  # Replace 'success' with the actual success URL
 
-    Args:
-        request (HttpRequest): The request object.
+    else:
+        form = RegisterFormVendor()
 
-    Returns:
-        HttpResponse: Rendered registration form for vendor or a redirection to the home page after successful registration.
-    """
-    def get(self, request):
-        try:
-            form = RegisterFormVendor()
-            return render(request, 'registerVendor.html', {'form': form})
-        except Exception as e:
-            logger.error(f"An error occurred: {str(e)}")
-            error_message = str(e)          
-            messages.error(request, f'An error occurred: {str(e)}')
-            return redirect('register-vendor')
-
-    def post(self, request):
-        try:
-            form = RegisterFormVendor(request.POST)
-            if form.is_valid():
-                email = form.cleaned_data['email']  # Get the email from the form
-                # Check if a user with this email already exists
-                if User.objects.filter(email=email).exists():
-                    messages.error(request, 'This email is already registered.')
-                    return redirect('register-vendor')
-                user = form.save(commit=False)
-                user.username = user.username.lower()
-                user.save()
-                login(request, user)
-                email_sender_view = SendEmailView()
-                response = email_sender_view.send_email(request.user.email)
-                messages.success(request, 'You have signed up successfully.')
-                return redirect('home-vendor')
-            else:
-                return render(request, 'registerVendor.html', {'form': form})
-        except Exception as e:
-            logger.error(f"An error occurred: {str(e)}")
-            error_message = str(e)
-            messages.error(request, f'An error occurred: {str(e)}')
-            return redirect('register-vendor')
+    return render(request, 'registerVendor.html', {'form': form})
 
 from django.core.paginator import Paginator
 class VendorView(LoginRequiredMixin,View):
@@ -628,8 +589,8 @@ class RfpForQuotesView(LoginRequiredMixin, View):
     def get(self, request):
         try:
             # Get the list of RFPs
-            quotes = Quotes.objects.filter(vendor_id=request.user.id)
-
+            rfps = RFPList.objects.all()
+            quotes = Quotes.objects.all()
             # Get the list of RFPs where the vendor is the winner
             won_rfps = RFPList.objects.filter(quotes__winner=request.user).distinct()
 
@@ -641,16 +602,16 @@ class RfpForQuotesView(LoginRequiredMixin, View):
 
             # Create a dictionary with RFP IDs as keys and associated quotes with comments as values
            
-            paginator = Paginator(quotes, 5)  # 5 RFPs per page
+            paginator = Paginator(rfps, 5)  # 5 RFPs per page
             page = request.GET.get('page')  # Get the current page number from the URL parameter
-            quotes = paginator.get_page(page)
+            rfps = paginator.get_page(page)
         except Quotes.DoesNotExist:
             raise Http404("No RFPs found")
 
         return render(
             request,
             'rfp_for_quotes.html',
-            {'quotes': quotes, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps}
+            {'rfps': rfps, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps,'quotes':quotes}
         )
 from django.views.generic.edit import UpdateView
 
@@ -1098,10 +1059,39 @@ def select_winner(request, id, quotes_id):
         quotes_to_update.update(winner=winner_user)
 
         # Return the winner's name
-        return JsonResponse({'winner_name': winner_user.username})
+        return redirect('rfp-quotes')
     else:
         # All quotes associated with this RFP already have winners, handle the error as needed
         return JsonResponse({'error': 'All quotes from this RFP already have winners'})
+    
+from django.http import JsonResponse
+
+@login_required
+def remove_winner(request, id, quotes_id):
+    # Fetch the quote and RFP based on IDs
+    quote = get_object_or_404(Quotes, pk=quotes_id)
+    rfp = get_object_or_404(RFPList, pk=id)
+
+    # Check if the quote belongs to the specified RFP
+    if quote.rfp != rfp:
+        # Quote does not belong to the specified RFP, handle the error as needed
+        return JsonResponse({'error': 'Quote does not belong to the specified RFP'})
+
+    # Check if the quote currently has a winner
+    if quote.winner is not None:
+        # Get the RFP number of the current quote
+        rfp_number = quote.rfp.id
+
+        # Remove the winner from all quotes with the same RFP number
+        related_quotes = Quotes.objects.filter(rfp__id=rfp_number)
+        related_quotes.update(winner=None)
+
+        # Return a success response or any other information you need
+        return redirect('rfp-quotes')
+    else:
+        # The quote does not have a winner, handle the error as needed
+        return JsonResponse({'error': 'The quote does not have a winner to remove'})
+
 
 from .forms import AdminCommentsForm
 

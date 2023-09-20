@@ -26,30 +26,30 @@
             </tr>
         </thead>
         <tbody>
-            {% for quote in quotes %}
-            <tr {% if quote.rfp in won_rfps %}class="won-rfp"{% endif %}>
-                <td>{{ quote.rfp.id }}</td>
-                <td>{{ quote.rfp.rfp_title }}</td>
-                <td>{{ quote.rfp.last_date }}</td>
-                <td>{{ quote.rfp.min_amount }}</td>
-                <td>{{ quote.rfp.max_amount }}</td>
+            {% for rfp in rfps %}
+            <tr {% if rfp in won_rfps %}class="won-rfp"{% endif %}>
+                <td>{{ rfp.id }}</td>
+                <td>{{ rfp.rfp_title }}</td>
+                <td>{{ rfp.last_date }}</td>
+                <td>{{ rfp.min_amount }}</td>
+                <td>{{ rfp.max_amount }}</td>
                 <td>
                     <div class="status-box">
-                        <div class="status-cell {% if quote.rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
-                            {{ quote.rfp.status|capfirst }}
+                        <div class="status-cell {% if rfp.status == 'open' %}status-green{% else %}status-red{% endif %}">
+                            {{ rfp.status|capfirst }}
                         </div>
                     </div>
                 </td>
                 <td>
-                    {% if quote.rfp.id in applied_rfps %}
-                        {% if quote.rfp in won_rfps %}
+                    {% if rfp.id in applied_rfps %}
+                        {% if rfp in won_rfps %}
                             you won!
                         {% else %}
                             Applied
                         {% endif %}
                        
                     {%else%}
-                    <a href="{% url 'apply-for-quote' quote.rfp.id %}" class="action-link approve-link" data-status="Approved">
+                    <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
                         <strong><h4>Apply</h4></strong>
                     </a>
                     {%endif%}
@@ -57,23 +57,19 @@
                 
     
                 <td>
-                    {% if quote.updated == False%}
-                    {% if quote.vendor.user == request.user %}
-                        {% with comments=quote.admin_comments %}
-                            {% if comments %}
+                    {% for quote in quotes %}
+                        {% if quote.rfp_id == rfp.id and not quote.updated and quote.vendor.user == request.user %}
+                            {% if quote.admin_comments %}
                                 <ul>
-                                    <li>Admin Comments: {{ comments }}</li>
+                                    <li>Admin Comments: {{ quote.admin_comments }}</li>
                                 </ul>
-                                    <!-- Comments exist, enable apply button -->
-                                    <a href="{% url 'apply-for-quote-again' quote.quotes_id quote.rfp.id %}" class="action-link approve-link" data-status="Approved">
-                                        <strong><h4>Apply</h4></strong>
-                                    </a>
-                               
+                                <!-- Comments exist, enable apply button -->
+                                <a href="{% url 'apply-for-quote-again' quote.quotes_id rfp.id %}" class="action-link approve-link" data-status="Approved">
+                                    <strong><h4>Apply</h4></strong>
+                                </a>
                             {% endif %}
-                        {% endwith %}
-                    {% endif %}
-                {%endif%}
-
+                        {% endif %}
+                    {% endfor %}
                 </td>
             </tr>
             {% endfor %}

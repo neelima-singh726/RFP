@@ -1,35 +1,156 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    
+    <!-- Include Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
-{% block content %}
-<div class="container center-card">
-    <div class="card p-4"> <!-- Add p-4 class for padding -->
-        <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->
-            <span class="navbar-brand">Welcome to RFP</span>
-        </nav>
-        <div class="card-body" style="max-height: 400px; overflow-y: auto;"> <!-- Add max-height and overflow-y for scrollable content -->
-            <form method="POST">
-                {% csrf_token %}
-                <h2 class="mb-4">Sign Up</h2> <!-- Add margin to the heading -->
-                {% for field in form %}
-                <div class="form-group"> <!-- Use form-group for better styling -->
-                    {% if field.errors %}
-                    <ul class="errorlist">
-                        {% for error in field.errors %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                    {{ field.label_tag }}
-                    {{ field }}
-                </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">Register</button> <!-- Used Bootstrap button class -->
-                <p class="mt-2">Already have an account? <a href="{% url 'login' %}">Login</a></p>
-                <p>Register as Admin <a href="{% url 'register' %}">Register</a></p>
-                <p>Forgot Password <a href = "{% url 'forgot-password' %}">Forgot Password </a><p>
-            </form>
-        </div>
+    <!-- Include jQuery (required by Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include Select2 JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+    
+        .container {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 80px;
+            max-width: 400px;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+    
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+    
+        .form-group {
+            margin-bottom: 20px;
+        }
+    
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    
+        select {
+            height: 100px;
+        }
+    
+        button[type="submit"] {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <h2>Registration</h2>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Username:</label>
+                {{ form.username }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}">First Name:</label>
+                {{ form.first_name }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+                {{ form.last_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email:</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}">Password:</label>
+                {{ form.password1 }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+                {{ form.password2 }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.revenue.id_for_label }}">Revenue:</label>
+                {{ form.revenue }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.No_of_emp.id_for_label }}">Number of Employees:</label>
+                {{ form.No_of_emp }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.gst_no.id_for_label }}">GST Number:</label>
+                {{ form.gst_no }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.phone_no.id_for_label }}">Phone Number:</label>
+                {{ form.phone_no }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category:</label>
+                <select id="{{ form.category.id_for_label }}" name="{{ form.category.name }}" multiple>
+                    {% for category in form.category.field.queryset %}
+                        <option value="{{ category.pk }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit">Register</button>
+        </form>
     </div>
-</div>
 
-{% endblock content %}
+    <!-- Initialize Select2 for the category field -->
+    <script>
+        $(document).ready(function() {
+            $('#{{ form.category.id_for_label }}').select2();
+        });
+    </script>
+</body>
+</html>

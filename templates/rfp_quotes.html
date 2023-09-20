@@ -5,7 +5,7 @@
 
 {% block section2 %}
 <div>
-    <h3>RFP List</h3>
+    <h3>RFP Quotes</h3>
   </div>
   <div class="bs-example">
     <br>
@@ -38,6 +38,8 @@
                             <a href="{% url 'select_winner' quote.rfp.id quote.quotes_id %}" class="btn btn-success">Select Winner</a>
                         {% else %}
                              {{ quote.winner }}
+                            <a href="{% url 'remove_winner' quote.rfp.id quote.quotes_id %}" class="btn btn-success">Remove </a>
+
                         {% endif %}
                     </td>
                     <td>

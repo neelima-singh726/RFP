@@ -41,8 +41,10 @@ class RegisterFormVendor(UserCreationForm):
     gst_no = forms.CharField(max_length=100)
     phone_no = forms.CharField(max_length=12)
     revenue = forms.CharField(max_length=255)
-    category = forms.ModelChoiceField(queryset=Category.objects.filter(c_status='active'))  # Filter for active categories
-
+    category = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.filter(c_status='active'),  # Filter for active categories
+        widget=forms.SelectMultiple(attrs={'class': 'select2'}),
+    )
     class Meta(UserCreationForm.Meta):
         model = User  # Set the model to User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'revenue', 'No_of_emp', 'gst_no', 'phone_no', 'category']
@@ -60,13 +62,14 @@ class RegisterFormVendor(UserCreationForm):
         # Create a Vendor instance related to the user
         vendor = Vendor.objects.create(
             user=user,
-            revenue=self.cleaned_data.get('revenue'),
-            No_of_emp=self.cleaned_data.get('No_of_emp'),
-            gst_no=self.cleaned_data.get('gst_no'),
-            phone_no=self.cleaned_data.get('phone_no'),
-            category=self.cleaned_data.get('category'),
+            revenue=self.cleaned_data['revenue'],
+            No_of_emp=self.cleaned_data['No_of_emp'],
+            gst_no=self.cleaned_data['gst_no'],
+            phone_no=self.cleaned_data['phone_no'],
         )
 
+        # Set the many-to-many relationship
+        vendor.category.set(self.cleaned_data['category'])
         return user
 
 
