@@ -37,13 +37,14 @@ class RegisterForm(UserCreationForm):
 
 
 class RegisterFormVendor(UserCreationForm):
-    No_of_emp = forms.IntegerField()
-    gst_no = forms.CharField(max_length=100)
-    phone_no = forms.CharField(max_length=12)
-    revenue = forms.CharField(max_length=255)
+    No_of_emp = forms.IntegerField(required=True)
+    gst_no = forms.CharField(max_length=100,required=True)
+    phone_no = forms.CharField(max_length=12,required=True)
+    revenue = forms.CharField(max_length=255,required=True)
     category = forms.ModelMultipleChoiceField(
         queryset=Category.objects.filter(c_status='active'),  # Filter for active categories
         widget=forms.SelectMultiple(attrs={'class': 'select2'}),
+        required=True
     )
     class Meta(UserCreationForm.Meta):
         model = User  # Set the model to User
@@ -74,13 +75,14 @@ class RegisterFormVendor(UserCreationForm):
 
 
 class RfpListForm(forms.ModelForm):
-    rfp_title = forms.CharField(max_length=255)
-    item_desc = forms.CharField()
-    last_date = forms.DateField()
-    min_amount = forms.FloatField()
-    max_amount = forms.FloatField()
+    rfp_title = forms.CharField(max_length=255,required=True)
+    item_desc = forms.CharField(required=True)
+    last_date = forms.DateField(required=True)
+    min_amount = forms.FloatField(required=True)
+    max_amount = forms.FloatField(required=True)
     vendors = forms.ModelMultipleChoiceField(
         queryset=Vendor.objects.all(),  # Queryset to fetch all vendors
+        required=True,
         widget=forms.SelectMultiple(attrs={'class': 'select2'}),
     )
 
@@ -91,7 +93,8 @@ class RfpListForm(forms.ModelForm):
 class CategorySelectionForm(forms.Form):
     category = forms.ModelChoiceField(
         queryset=Category.objects.filter(c_status='active'),
-        label='Select Category'
+        empty_label='Select Category',
+        required=True
     )
 
         
@@ -99,14 +102,23 @@ class CategorySelectionForm(forms.Form):
 from .models import Admin, Quotes
 
 class QuotesForm(forms.ModelForm):
+    vendor_price = forms.FloatField(required=True)
+    quantity = forms.IntegerField(required=True)
+    total_price = forms.FloatField(required=True)
     class Meta:
         model = Quotes
         fields = ['vendor_price', 'item_desc','quantity', 'total_price']
 
 class CategoryForm(forms.ModelForm):
+    c_name = forms.CharField(
+        max_length=100,required=True)
+    c_status = forms.CharField(
+        max_length=10,
+        required=True
+    )
     class Meta:
         model = Category
         fields = ['c_name','c_status'] 
 
 class AdminCommentsForm(forms.Form):
-    comments = forms.CharField(widget=forms.Textarea)
+    comments = forms.CharField(widget=forms.Textarea,required=True)

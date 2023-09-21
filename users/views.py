@@ -185,16 +185,12 @@ class SignUpView(CreateView):
         user.save()
         login(self.request, user)
 
-        messages.success(self.request, 'Admin registration successful!')
-
         return redirect(reverse(self.success_redirect_url))
 
     def post(self, request):
         try:
            form = self.form_class(request.POST)
            if form.is_valid():
-                messages.success(self.request, 'Admin registration successful!')
-
                 for field_name, field_value in form.cleaned_data.items():
                     if not field_value:
                         messages.error(request, f'{field_name.capitalize()} field cannot be empty.')
@@ -267,8 +263,7 @@ class RfpQuotesView(LoginRequiredMixin,View):
         HttpResponse: Renders quotes created by vendor, filter them as per admin needs, only approved vendors will be displayed.
     """
     def get(self, request):
-        approved_vendors = Vendor.objects.filter(v_status='approve')
-        quotes = Quotes.objects.filter(vendor__in=approved_vendors).select_related('rfp', 'vendor').all()
+        quotes = Quotes.objects.filter(rfp__created_by=request.user).select_related('rfp', 'vendor').all()
         context = {'quotes': quotes}
         return render(request, 'rfp_quotes.html', context)
     
@@ -1097,6 +1092,7 @@ def request_quote(request, id, quotes_id):
             comments = form.cleaned_data['comments']
             # Save the comments in the Quotes model
             quote.admin_comments = comments
+            quote.updated = 0
             quote.save()
             vendor = quote.vendor
             user = vendor.user

@@ -1,15 +1,6 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
 <div class="container center-card">
     <div class="card p-4"> <!-- Add p-4 class for padding -->
         <nav class="navbar navbar-light bg-light"> <!-- Light blue navbar -->

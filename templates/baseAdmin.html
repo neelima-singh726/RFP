@@ -185,7 +185,7 @@
         }
         #rfptable tfoot th input {
             width: 100%;
-            box-sizing: border-box; /* Ensure padding and border are included in the width */
+            box-sizing: border-box; 
         }
     </style>
    
@@ -232,12 +232,14 @@
         <p>Welcome username</p>
         &nbsp;<a href="{% url 'logout' %}">Logout</a>
     </nav>
-    {% block section2 %}{% endblock %}
+    {% block section2 %}
+    
+    {% endblock %}
     {% block customdiv %}{% endblock %}
 </div>
 </div>
 {% if messages %}
-<div class="messages">
+    <div class="messages">
     {% for message in messages %}
         <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
             {{ message }}

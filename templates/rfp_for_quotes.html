@@ -49,9 +49,11 @@
                         {% endif %}
                        
                     {%else%}
-                    <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
+                    {% if rfp.status == 'open' %}
+                        <a href="{% url 'apply-for-quote' rfp.id %}" class="action-link approve-link" data-status="Approved">
                         <strong><h4>Apply</h4></strong>
                     </a>
+                    {%endif%}
                     {%endif%}
                 </td>
                 

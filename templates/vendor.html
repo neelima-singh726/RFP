@@ -41,7 +41,7 @@
                     {%if vendor.v_status == 'approve'%}
                         <a href="{% url 'vendor-reject' vendor.user.id %}" class="action-link reject-link" data-status="Rejected"><i>Reject</i></a>
                     {%else%}
-                        <a href="{% url 'vendor-approve' vendor.user.id %}" class="action-link approve-link" data-status="Approved"><i>Approve /</i></a>
+                        <a href="{% url 'vendor-approve' vendor.user.id %}" class="action-link approve-link" data-status="Approved"><i>Approve</i></a>
                     {%endif%}
                     </td>
             </tr>

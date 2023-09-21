@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "baseAdmin.html" %}
 
-{% block content %}
+{% block section2 %}
     <h1>Request Quote Again</h1>
     <p>RFP Title: {{ quote.rfp.rfp_title }}</p>
     <form method="post">
@@ -8,6 +8,4 @@
         {{ form.as_p }}
         <button type="submit">Request Quote Again</button>
     </form>
-    <h2>Admin Comments</h2>
-    <p>{{ quote.admin_comments }}</p>
 {% endblock %}

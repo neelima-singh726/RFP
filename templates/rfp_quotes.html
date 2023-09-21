@@ -43,8 +43,10 @@
                         {% endif %}
                     </td>
                     <td>
-                    <a href="{% url 'request_quote' quote.rfp.id quote.quotes_id %}" class="btn btn-success">Request Quote</a>
-                     </td>
+                        {% if not quote.winner %}
+                          <a href="{% url 'request_quote' quote.rfp.id quote.quotes_id %}" class="btn btn-success">Request Quote</a>
+                        {%endif%}
+                        </td>
                 </tr>
             {% endfor %}
         </tbody>
