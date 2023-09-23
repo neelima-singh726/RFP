@@ -48,6 +48,8 @@ class Vendor(models.Model):
     )
     category = models.ManyToManyField(Category)
     created_date = models.DateTimeField(default=timezone.now)
+    country = models.CharField(max_length=255, blank=True)  # New field to store selected country
+    state = models.CharField(max_length=255, blank=True)
     
     class Meta:
         ordering = ['-created_date']

@@ -1,8 +1,9 @@
 from datetime import timezone
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+import requests
 from users.models import User
-
+import json
 from users.models import Category, Quotes, RFPList, Vendor
 from django.db import transaction
 
@@ -46,9 +47,38 @@ class RegisterFormVendor(UserCreationForm):
         widget=forms.SelectMultiple(attrs={'class': 'select2'}),
         required=True
     )
+    country = forms.ChoiceField(choices=[], required=True, widget=forms.Select(attrs={'class': 'select2'}))
+    state = forms.ChoiceField(choices=[], required=True, widget=forms.Select(attrs={'class': 'select2'}))
+
     class Meta(UserCreationForm.Meta):
-        model = User  # Set the model to User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'revenue', 'No_of_emp', 'gst_no', 'phone_no', 'category']
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'revenue', 'No_of_emp', 'gst_no', 'phone_no', 'category', 'country', 'state']
+    
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Populate the country choices from the API when initializing the form
+        countries_response = requests.get("http://68.183.82.227:1337/api/countries")
+        if countries_response.status_code == 200:
+            countries_data = countries_response.json().get('data', [])
+            country_choices = [(country['id'], country['attributes']['name']) for country in countries_data]
+        else:
+            country_choices = []
+
+        self.fields['country'].choices = [('', 'Select Country')] + country_choices
+
+        # Check if a selected country is passed in the form data
+        selected_country_id = None
+        if 'country' in self.data:
+            selected_country_id = self.data['country']
+        
+        # Populate the state choices based on the selected country
+        
+
+    
+    
+        
 
     @transaction.atomic
     def save(self, commit=True):
@@ -67,6 +97,8 @@ class RegisterFormVendor(UserCreationForm):
             No_of_emp=self.cleaned_data['No_of_emp'],
             gst_no=self.cleaned_data['gst_no'],
             phone_no=self.cleaned_data['phone_no'],
+            country=self.cleaned_data['country'],  # Set the selected country
+            state=self.cleaned_data['state'],
         )
 
         # Set the many-to-many relationship

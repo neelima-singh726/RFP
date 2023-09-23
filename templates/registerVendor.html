@@ -80,6 +80,16 @@
     
 </head>
 <body>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
     <div class="container">
         <h2>Registration</h2>
         <form method="post">
@@ -142,18 +152,66 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label for="{{ form.country.id_for_label }}">Country:</label>
+                <select id="{{ form.country.id_for_label }}" name="{{ form.country.name }}">
+                    <option value="">Select Country</option>
+                    {% for country in countries_data %}
+                        <option value="{{ country.id }}">{{ country.attributes.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.state.id_for_label }}">State:</label>
+                <select id="{{ form.state.id_for_label }}" name="{{ form.state.name }}">
+                    <option value="">Select State</option>
+                </select>
+            </div>
+
             <button type="submit">Register</button>
             <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
                     <p>Register as Vendor <a href="{% url 'register-vendor' %}">Register</a></p>
                     <p>Forgot Password <a href="{% url 'forgot-password' %}">Forgot Password</a></p>
+                    {% if form.errors %}
+<div class="alert alert-danger">
+    <strong>Error:</strong>
+    {{ form.errors }}
+</div>
+{% endif %}
         </form>
+        
     </div>
+    
 
-    <!-- Initialize Select2 for the category field -->
-    <script>
-        $(document).ready(function() {
-            $('#{{ form.category.id_for_label }}').select2();
+<!-- Initialize Select2 for the category field -->
+<script>
+    $(document).ready(function() {
+        $('#{{ form.category.id_for_label }}').select2();
+        $('#{{ form.country.id_for_label }}').change(function() {
+            var selectedCountryId = $(this).val();
+            var stateDropdown = $('#{{ form.state.id_for_label }}');
+            
+            // Clear existing state options
+            stateDropdown.empty();
+            
+            // Fetch states data for the selected country from the API
+            if (selectedCountryId) {
+                var apiUrl = "http://68.183.82.227:1337/api/countries/" + selectedCountryId + "?populate=states";
+                $.getJSON(apiUrl, function(data) {
+                    var states = data.data.attributes.states.data;
+                    // Populate state dropdown with fetched states
+                    $.each(states, function(index, state) {
+                        stateDropdown.append($('<option>', {
+                            value: state.id,
+                            text: state.attributes.name
+                        }));
+                    });
+                });
+            }
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>

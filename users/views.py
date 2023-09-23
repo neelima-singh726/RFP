@@ -6,6 +6,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from requests import Response
+import requests
 from rfp_project.settings import EMAIL, PSWD
 from users.forms import LoginForm, QuotesForm, RegisterForm, RegisterFormVendor, RfpListForm
 from django.utils.decorators import method_decorator
@@ -241,16 +242,21 @@ def signup_vendor(request):
         if form.is_valid():
             # Save the user instance created by the form
             user = form.save()
-
-            # Create the Vendor instance related to the user
             
-            # Redirect to a success page or login page
             return redirect('login')  # Replace 'success' with the actual success URL
+        if not form.is_valid():
+            print(form.errors)
 
     else:
         form = RegisterFormVendor()
+        
+    countries_response = requests.get("http://68.183.82.227:1337/api/countries")
+    if countries_response.status_code == 200:
+        countries_data = countries_response.json().get('data', [])
+    else:
+        countries_data = []
 
-    return render(request, 'registerVendor.html', {'form': form})
+    return render(request, 'registerVendor.html', {'form': form, 'countries_data': countries_data})
 
 
 class VendorView(LoginRequiredMixin,View):
