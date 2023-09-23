@@ -7,7 +7,6 @@ urlpatterns = [
     path('login/', views.SignInView.as_view(), name='login'),
     path('logout/', views.SignOutView.as_view(), name='logout'),
     path('register/', views.SignUpView.as_view(), name='register'),
-    # path('register-vendor/', views.SignUpVendorView.as_view(), name='register-vendor'),
     path('register-vendor/', views.signup_vendor, name='register-vendor'),
 
     path('home-admin/', views.HomeView.as_view(), name='home-admin'),
@@ -24,7 +23,6 @@ urlpatterns = [
     
     path('create-rfp/<str:category>/', views.create_rfp, name='create-rfp'),
     
-    # path('create-rfp/<str:category>/', views.CreateRfpView.as_view(), name='create-rfp'),
     path('apply/<int:rfp_id>/', views.CreateRFpForQuoteView.as_view(), name='apply-for-quote'),
     path('forgot-password/', views.forgot_password, name='forgot-password'),
     path("reset/<uidb64>/<token>/<timestamp>/", views.reset_password, name='reset'),

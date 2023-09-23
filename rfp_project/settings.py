@@ -39,6 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'social_django',
+    # 'django.contrib.sites',
+    # 'oauth_app',
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.google',
+
 ]
 
 MIDDLEWARE = [
@@ -49,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'rfp_project.urls'
@@ -64,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
             ],
         },
     },
@@ -183,8 +193,29 @@ EMAIL = config('EMAIL')
 
 LOGIN_URL = 'login'
 # AUTHENTICATION_BACKENDS = [
-#      'users.backend.CustomAuthBackend',
+#      'social_core.backends.google.GoogleOAuth2',
 #      'django.contrib.auth.backends.ModelBackend',
+#       'account.authentication.EmailAuthBackend',
 # ]
 
 AUTH_USER_MODEL = 'users.User'
+
+# LOGIN_REDIRECT_URL = 'home-admin'
+# LOGOUT_URL = 'logout'
+# LOGOUT_REDIREST_URL = 'login'
+
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '282721479819-v93aitsfrss5pv9kk2dpfdm7so06ts0g.apps.googleusercontent.com'
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+
+# SOCIALACCOUNT_PROVIDERS = {
+#     'google': {
+#         'SCOPE': [
+#             'profile',
+#             'email',
+#         ],
+#         'AUTH_PARAMS': {
+#             'access_type': 'online',
+#         }
+#     }
+# }

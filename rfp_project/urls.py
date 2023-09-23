@@ -22,4 +22,6 @@ handler404 = 'users.views.custom_404_view'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('users.urls')),
+    path('social-auth/',include('social_django.urls',namespace='social')),
+
 ]

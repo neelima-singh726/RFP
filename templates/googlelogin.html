@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+
+    <title>django google sign in</title>
+</head>
+<body >
+  {% load socialaccount %}
+  <h2>google login</h2>
+  <a href = "{% provider_login_url 'google' %}?next=/">Login</a>
+    
+ 
+</body>
+</html>

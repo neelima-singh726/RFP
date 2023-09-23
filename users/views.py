@@ -70,6 +70,12 @@ class HomeVendorView(LoginRequiredMixin,View):
             return HttpResponse(f"An error occurred: {error_message}", status=500)
 
 class SignInView(View):
+    """
+    A view for handling user sign-in functionality.
+
+    Args:
+        View (class): A class provided by Django for creating views.
+    """
     def get(self, request):
         try:
             form = LoginForm()
@@ -222,6 +228,14 @@ class SignUpView(CreateView):
 
 
 def signup_vendor(request):
+    """View for vendor sign up.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: Rendered registration form for admin or a redirection to the home page after successful registration.
+    """
     if request.method == 'POST':
         form = RegisterFormVendor(request.POST)
         if form.is_valid():
@@ -238,7 +252,7 @@ def signup_vendor(request):
 
     return render(request, 'registerVendor.html', {'form': form})
 
-from django.core.paginator import Paginator
+
 class VendorView(LoginRequiredMixin,View):
     """View for Vendor Page.
 
@@ -519,7 +533,13 @@ class RfpForQuotesView(LoginRequiredMixin, View):
     def get(self, request):
         try:
             # Get the list of RFPs
-            rfps = RFPList.objects.all()
+            logged_in_vendor = request.user.vendor
+
+        # Get the categories associated with the logged-in vendor
+            vendor_categories = logged_in_vendor.category.all()
+
+        # Filter the RFPs based on categories
+            rfps = RFPList.objects.filter(category__in=vendor_categories).distinct()
             quotes = Quotes.objects.all()
             # Get the list of RFPs where the vendor is the winner
             won_rfps = RFPList.objects.filter(quotes__winner=request.user).distinct()
@@ -623,17 +643,6 @@ class UpdateRFpForQuoteView(UpdateView):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 def send_emails(subject, body, sender, recipients, password):
     """Send broadcast emails.
 
@@ -672,6 +681,19 @@ from django import forms
 from django.utils import timezone
 
 def create_rfp(request, category=None):
+    """
+    Create a Request for Proposal (RFP) based on user input.
+
+    This function handles the creation of an RFP when the HTTP request method is POST.
+    It validates the form data, associates the RFP with the logged-in user, and stores it in the database.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        category (Category, optional): The category to associate with the RFP (default is None).
+
+    Returns:
+        HttpResponse: A response indicating the success or failure of the RFP creation process.
+    """
     if request.method == 'POST':
         form = RfpListForm(request.POST)
         if form.is_valid():
@@ -718,75 +740,7 @@ def create_rfp(request, category=None):
 
     return render(request, 'users/rfplist_form.html', {'form': form})
 
-class CreateRfp_View(CreateView):
-    """Class-based view for creating a new Request for Proposal (RFP).
 
-    This view is called when the 'Create Rfp' button is clicked and is used to create a new RFP.
-
-    Args:
-        CreateView (class): The base class for Django class-based views.
-
-    Attributes:
-        model (class): The model associated with the view (RFPList in this case).
-        fields (list): The fields of the model that should be displayed in the form.
-        success_url (str): The URL to redirect to after a successful form submission.
-    """
-    model = RFPList
-    fields = ['rfp_title','item_desc','last_date','min_amount','max_amount','vendors'] 
-    success_url = reverse_lazy('rfp-list')  # Redirect to rfp-list URL after successful form submission
-    
-    def get(self, request, *args, **kwargs):
-        # Display the form for GET requests
-        return super().get(request, *args, **kwargs)
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-
-        # Get the selected category (if available in the URL parameter)
-        selected_category = self.request.GET.get('category')
-        if selected_category:
-            form.fields['vendors'].queryset = Vendor.objects.filter(category=selected_category)
-
-        return form
-        
-    def form_valid(self, form):
-        last_date = form.cleaned_data['last_date']
-        if last_date < timezone.now().date():
-            # Raise a validation error if the date is in the past
-            form.add_error('last_date', "Last date should be greater than or equal to today's date.")
-            return self.form_invalid(form)
-        form.instance.created_by_id = self.request.user.id
-        # Save the form data and then send the email
-        response = super().form_valid(form)
-        
-        # Prepare the email subject and body
-        subject = 'New RFP Added'
-        body = f"A new RFP titled '{self.object.rfp_title}' has been added. Check it out!"
-        
-        # Get the list of user emails (assuming you have a `User` model with an `email` field)
-        
-        user_emails = Vendor.objects.select_related(
-        'user'
-        ).values_list(
-        'user__email',
-        flat = True
-         )
-        # user_emails = Vendor.objects.values_list('email', flat=True)
-        
-        # Convert the QuerySet to a list
-        recipients = list(user_emails)
-        
-        try:
-            # Send the email
-            send_emails(subject, body,EMAIL, recipients,PSWD)
-            return response
-        except Exception as e:
-            # Handle email sending errors here
-            # You can log the error or take appropriate action
-            return JsonResponse({'success': False, 'error': str(e)})
-        
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
         
 class CreateRFpForQuoteView(CreateView):
     """Class-based view for creating a new Request for Proposal (RFP) for quotes.
@@ -1003,6 +957,20 @@ from django.http import HttpResponse
 from .models import Quotes  
 
 def export_quotations(request, rfp_id):
+    """Export quotations for a specified Request for Proposal (RFP) as a CSV file.
+
+    This function retrieves quotations associated with a specific RFP, generates a CSV file containing
+    the relevant quotation data, and returns it as an HTTP response with the appropriate content type
+    for CSV files.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        rfp_id (int): The unique identifier of the RFP for which quotations should be exported.
+
+    Returns:
+        HttpResponse: An HTTP response containing the CSV file with quotation data as an attachment.
+    
+    """
     # Fetch quotations for the specified RFP
     quotations = Quotes.objects.filter(rfp_id=rfp_id)
 
@@ -1026,6 +994,21 @@ from django.http import JsonResponse
 
 @login_required
 def select_winner(request, id, quotes_id):
+    """Select a winning quotation for a specified Request for Proposal (RFP).
+
+    This function retrieves the quotation and RFP based on their respective IDs, and it checks if
+    the quotation belongs to the specified RFP. If the quote does not belong to the RFP, it returns
+    a JSON response indicating the error.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        id (int): The unique identifier of the RFP for which a winner is being selected.
+        quotes_id (int): The unique identifier of the quotation to be selected as the winner.
+
+    Returns:
+        JsonResponse: A JSON response indicating success or an error message if the quote does not
+                      belong to the specified RFP.
+    """
     # Fetch the quote and RFP based on IDs
     quote = get_object_or_404(Quotes, pk=quotes_id)
     rfp = get_object_or_404(RFPList, pk=id)
@@ -1053,6 +1036,24 @@ from django.http import JsonResponse
 
 @login_required
 def remove_winner(request, id, quotes_id):
+    """Remove the winner designation from a quotation for a specified Request for Proposal (RFP).
+
+    This function retrieves the quotation and RFP based on their respective IDs, and it checks if
+    the quotation belongs to the specified RFP. If the quote does not belong to the RFP, it returns
+    a JSON response indicating the error. It also checks if the quote currently has a winner and,
+    if so, removes the winner designation from all quotations with the same RFP number.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        id (int): The unique identifier of the RFP for which a winner designation is being removed.
+        quotes_id (int): The unique identifier of the quotation from which the winner is being removed.
+
+    Returns:
+        HttpResponse or JsonResponse: An HTTP response indicating success or an error message if
+                                       the quote does not belong to the specified RFP or if the
+                                       quote does not have a winner to remove.
+    
+    """
     # Fetch the quote and RFP based on IDs
     quote = get_object_or_404(Quotes, pk=quotes_id)
     rfp = get_object_or_404(RFPList, pk=id)
@@ -1082,6 +1083,23 @@ from .forms import AdminCommentsForm, CategorySelectionForm
 
 @login_required
 def request_quote(request, id, quotes_id):
+    """Handle requests for adding admin comments to a quotation and sending notification emails.
+
+    This function fetches the quotation and RFP based on their respective IDs and handles the process
+    of adding admin comments to a quotation. If the HTTP request method is POST and the form data is valid,
+    it saves the admin comments in the Quotes model, sends a notification email to the vendor, and redirects
+    to the 'rfp-quotes' page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        id (int): The unique identifier of the RFP associated with the quotation.
+        quotes_id (int): The unique identifier of the quotation for which admin comments are being added.
+
+    Returns:
+        HttpResponse or JsonResponse: An HTTP response indicating success or an error message if there was
+                                       an issue with saving comments or sending emails.
+  
+    """
     # Fetch the quote and RFP based on IDs
     quote = get_object_or_404(Quotes, pk=quotes_id)
     rfp = get_object_or_404(RFPList, pk=id)
@@ -1116,6 +1134,19 @@ def request_quote(request, id, quotes_id):
 from django.views.generic.edit import FormView
    
 class CategorySelectionView(FormView):
+    """View for selecting a category when creating a new Request for Proposal (RFP).
+
+    This class-based view inherits from Django's FormView and is used to display a form for selecting a category
+    when creating a new RFP. When the form is submitted and valid, it redirects the user to the 'create-rfp' view
+    with the selected category.
+
+    Args:
+        FormView (class): A class provided by Django for creating views that handle forms.
+
+    Returns:
+        HttpResponse: An HTTP response that renders the category selection form.
+    
+    """
     form_class = CategorySelectionForm
     template_name = 'category_selection.html'  # Create a template for category selection
 
