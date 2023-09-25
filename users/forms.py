@@ -74,10 +74,26 @@ class RegisterFormVendor(UserCreationForm):
             selected_country_id = self.data['country']
         
         # Populate the state choices based on the selected country
-        
+        self.populate_state_choices(selected_country_id)
 
     
-    
+    def populate_state_choices(self, selected_country_id):
+        if selected_country_id:
+            # Fetch the list of states for the selected country from the API
+            apiUrl = f"http://68.183.82.227:1337/api/countries/{selected_country_id}?populate=states"
+            response = requests.get(apiUrl)
+            if response.status_code == 200:
+                data = response.json().get('data', {})
+                states = data.get('attributes', {}).get('states', {}).get('data', [])
+                state_choices = [(state['id'], state['attributes']['name']) for state in states]
+            else:
+                state_choices = []
+        else:
+            state_choices = []
+        print("Selected Country ID:", selected_country_id)
+        print("State Choices:", state_choices)
+
+        self.fields['state'].choices = [('', 'Select State')] + state_choices
         
 
     @transaction.atomic

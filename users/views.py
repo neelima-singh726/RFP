@@ -241,12 +241,8 @@ def signup_vendor(request):
         form = RegisterFormVendor(request.POST)
         if form.is_valid():
             # Save the user instance created by the form
-            user = form.save()
-            
+            user = form.save()   
             return redirect('login')  # Replace 'success' with the actual success URL
-        if not form.is_valid():
-            print(form.errors)
-
     else:
         form = RegisterFormVendor()
         
