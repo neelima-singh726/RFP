@@ -13,28 +13,36 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 
     <style>
-        {%block style%}
+        
         .section-1 {
             background-color: #332D2D;
             width: 20%;
-            height: 100vh;
+            min-height: 150vh;
             float: left;
             color: grey;
+            
         }
-
+         .messages {
+            background-color: #198754;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+            padding: 10px 15px; 
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+        .messages.success {
+            background-color: #d4edda; 
+        }
         .section-2 {
             background-color: #c5cae9;
             width: 80%;
-            height: 100vh;
+            min-height: 150vh;
             float: right;
             
         }
-         .dash {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        {%endblock%}
+      
+      
 
         .options {
             text-align: left;
@@ -109,22 +117,22 @@
         }
     
         .status-cell {
-            padding: 5px 10px;
-            border-radius: 30px;
+            padding: 5px 10px; !important;
+            border-radius: 30px; !important;
         }
     
         .status-green {
-            background-color: green;
-            color: white;
-        }
+            background-color: green; !important;
+            color: white; !important;
+        } 
     
         .status-red {
-            background-color: red;
-            color: white;
+            background-color: red;!important;
+            color: white;!important;
         }
         .status-grey {
-            background-color: grey;
-            color: white;
+            background-color: grey;!important;
+            color: white;!important;
         }
         .action-link{
             color:green;
@@ -229,6 +237,15 @@
     </div>
 <div class="section-2">
     <nav class="navbar navbar-light bg-light">
+        {% if messages %}
+    <div class="messages">
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
         <p>Welcome username</p>
         &nbsp;<a href="{% url 'logout' %}">Logout</a>
     </nav>
@@ -238,15 +255,7 @@
     {% block customdiv %}{% endblock %}
 </div>
 </div>
-{% if messages %}
-    <div class="messages">
-    {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
+
 {%block script%}
 {%endblock%}
 

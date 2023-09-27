@@ -33,7 +33,7 @@
         .section-1 {
             background-color: #332D2D;
             width: 20%;
-            height: 100vh;
+            height: 150vh;
             float: left;
             color: grey;
         }
@@ -41,7 +41,7 @@
         .section-2 {
             background-color: #c5cae9;
             width: 80%;
-            height: 100vh;
+            height: 150vh;
             float: right;
             
         }
@@ -182,7 +182,18 @@
             margin-left: auto;
            
         }
-     
+        .messages {
+            background-color: #198754;
+            color: #FFFFFF; 
+            margin-bottom: 10px;
+            padding: 10px 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+            text-align: left;
+        }
+        .messages.success {
+            background-color: #d4edda; 
+        }
 
         .custom-div {
             margin : 10px;
@@ -221,14 +232,7 @@
     </div>
     <div class="section-2">
         <nav class="navbar navbar-light bg-light">
-            <p>Welcome username</p>
-            &nbsp;<a href = "{%url 'logout'%}">Logout</a>
-          </nav>
-          {%block section2%}{%endblock%}
-          {%block customdiv%}{%endblock%}
-        </div>
-
-          {% if messages %}
+            {% if messages %}
 <div class="messages">
     {% for message in messages %}
         <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -237,6 +241,14 @@
     {% endfor %}
 </div>
 {% endif %}
+            <p>Welcome username</p>
+            &nbsp;<a href = "{%url 'logout'%}">Logout</a>
+          </nav>
+          {%block section2%}{%endblock%}
+          {%block customdiv%}{%endblock%}
+        </div>
+
+          
 
 {%block script%}
 {%endblock%}

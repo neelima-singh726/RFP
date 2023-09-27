@@ -46,12 +46,16 @@
     // Wait for the document to be ready
     document.addEventListener('DOMContentLoaded', function() {
       // Get the last_date input element by its ID
-      const lastDateInput = document.getElementById('id_last_date');
+      const lastDateInput = document.getElementById('{{ form.last_date.id_for_label }}');
       
       // Check if the input element exists
       if (lastDateInput) {
         // Set its type to 'date' to enable the calendar
         lastDateInput.type = 'date';
+        const currentDate = new Date().toISOString().split('T')[0];
+
+      // Set the minimum date for the last date input to the current date
+        lastDateInput.min = currentDate;
       }
     });
   </script>

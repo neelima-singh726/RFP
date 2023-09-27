@@ -6,10 +6,22 @@
 {% block section2 %}
 <div>
     <h3>RFP List</h3>
+    <div class="rfp-filter">
+        &nbsp; &nbsp;
+        <select id="name-filter">
+            <option value="">RFP TITLE</option>
+            {% for rfp in rfp_values %}
+                <option value="{{ rfp }}">{{ rfp }} </option>
+            {% endfor %}
+        </select>
+       
+    </div>
+    <br>
   </div>
   <div class="bs-example">
     <a href="{% url 'select_category' %}" class= "btn btn-success add-rfp-button" >+Add RFP</a>
     <br>
+    
     <table id="rfptable" class="display">
         <thead>
             <tr>

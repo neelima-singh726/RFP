@@ -266,7 +266,11 @@ class VendorView(LoginRequiredMixin,View):
     
     def get(self, request):
         vendors = Vendor.objects.all()
-        return render(request,'Vendor.html',{'vendors':vendors})
+        fname_values = list(User.objects.values_list('first_name', flat=True))
+        lname_values = list(User.objects.values_list('last_name', flat=True))
+        email = list(User.objects.values_list('email', flat=True))
+
+        return render(request,'Vendor.html',{'vendors':vendors, 'fname_values':fname_values, 'lname_values':lname_values, 'email':email})
 
 
 class RfpQuotesView(LoginRequiredMixin,View):
@@ -280,7 +284,9 @@ class RfpQuotesView(LoginRequiredMixin,View):
     """
     def get(self, request):
         quotes = Quotes.objects.filter(rfp__created_by=request.user).select_related('rfp', 'vendor').all()
-        context = {'quotes': quotes}
+        rfp_values = list(Quotes.objects.values_list('item_name', flat=True))
+        
+        context = {'quotes': quotes, 'rfp_values':rfp_values}
         return render(request, 'rfp_quotes.html', context)
     
     
@@ -295,7 +301,9 @@ class RfpListView(LoginRequiredMixin,View):
     """
     def get(self, request):
         rfps = RFPList.objects.filter(created_by=request.user) 
-        return render(request,'rfp_list.html',{'rfps':rfps})
+        rfp_values = list(RFPList.objects.values_list('rfp_title', flat=True))
+        
+        return render(request,'rfp_list.html',{'rfps':rfps,'rfp_values':rfp_values})
     
 
 class CategoryView(LoginRequiredMixin,View):
@@ -309,10 +317,11 @@ class CategoryView(LoginRequiredMixin,View):
     
     def get(self, request):
         category = Category.objects.all()
-        # paginator = Paginator(category, 5)  # 5 vendors per page
-        # page = request.GET.get('page')  # Get the current page number from the URL parameter
-        # category = paginator.get_page(page) 
-        return render(request,'category.html',{'category':category})
+        status_values_queryset = set(Category.objects.values_list('c_status', flat=True).distinct())
+        status_values = list(status_values_queryset)
+        cname_values = list(Category.objects.values_list('c_name', flat=True).distinct())
+
+        return render(request, 'category.html', {'category': category, 'status_values': status_values , 'cname_values' : cname_values})
   
 
 def approve(request, vendor_id):
@@ -524,11 +533,6 @@ class SendEmailView(View):
             return {'success': False, 'error': str(e)}
 
 
-from django.db.models import Exists, OuterRef
-
-
-from django.db.models import OuterRef, Subquery
-
 class RfpForQuotesView(LoginRequiredMixin, View):
     """View for vendors to quote RFPs."""
 
@@ -545,6 +549,7 @@ class RfpForQuotesView(LoginRequiredMixin, View):
             quotes = Quotes.objects.all()
             # Get the list of RFPs where the vendor is the winner
             won_rfps = RFPList.objects.filter(quotes__winner=request.user).distinct()
+            rfp_values = list(RFPList.objects.filter(category__in=vendor_categories).values_list('rfp_title', flat=True).distinct())
 
             # Get the list of RFP IDs for which the vendor has already applied
             applied_rfps = Quotes.objects.filter(
@@ -561,7 +566,7 @@ class RfpForQuotesView(LoginRequiredMixin, View):
         return render(
             request,
             'rfp_for_quotes.html',
-            {'rfps': rfps, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps,'quotes':quotes}
+            {'rfps': rfps, 'applied_rfps': applied_rfps, 'won_rfps': won_rfps,'quotes':quotes,'rfp_values':rfp_values}
         )
 from django.views.generic.edit import UpdateView
 
@@ -729,6 +734,8 @@ def create_rfp(request, category=None):
             except Exception as e:
                 # Handle email sending errors here
                 print(f"Email sending failed: {str(e)}")
+            
+            messages.success(request, 'RFP created successfully.')  # Add success message
 
             # Redirect to a success page or another appropriate view
             return redirect('rfp-list')  # Replace 'rfp-list' with your success URL
@@ -834,27 +841,32 @@ def reset_password(request, uidb64, token, timestamp):
     Returns:
         HttpResponse: The HTTP response object.
     """
+    try:
+        uid = urlsafe_b64decode(uidb64).decode('utf-8')
+        user = User.objects.get(pk=uid)
+        
+        # Check if the user has already reset their password
+        if user.reset:
+            return render(request, 'password_reset_timeout.html')
+        
         # Convert the timestamp to an integer
-    timestamp = int(timestamp)
+        timestamp = int(timestamp)
         
         # Calculate the elapsed time since the link was generated
-    current_time = int(time.time())
-    elapsed_time = current_time - timestamp
+        current_time = int(time.time())
+        elapsed_time = current_time - timestamp
         
         # Check if the link has expired (e.g., 60 seconds)
-    expiration_time = 60  # Adjust as needed
-    if elapsed_time > expiration_time:
-        return render(request, 'password_reset_timeout.html')
+        expiration_time = 100  # Adjust as needed
+        if elapsed_time > expiration_time:
+            return render(request, 'password_reset_timeout.html')
         
-    if request.method == 'POST':
-        new_password = request.POST.get('newPassword')
+        if request.method == 'POST':
+            new_password = request.POST.get('newPassword')
             
-        try:
-            uid = urlsafe_b64decode(uidb64).decode('utf-8')
-            user = User.objects.get(pk=uid)
-                
             if default_token_generator.check_token(user, token):
                 user.set_password(new_password)
+                user.reset = True
                 user.save()
                 # Add a success message
                 messages.success(request, 'Password reset successful. You can now log in with your new password.')
@@ -863,8 +875,8 @@ def reset_password(request, uidb64, token, timestamp):
                 return redirect('login') 
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid token'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
     
     return render(request, 'reset_password.html', {'uidb64': uidb64, 'token': token})
 
@@ -897,6 +909,8 @@ def send_reset_email(request):
         if email:
             try:
                 user = User.objects.get(email=email)
+                user.reset = False
+                user.save()
                 token = default_token_generator.make_token(user)
                 uidb64 = urlsafe_b64encode(force_bytes(user.pk))
                 timestamp = int(time.time())  # Get the current timestamp
@@ -1156,3 +1170,54 @@ class CategorySelectionView(FormView):
         selected_category = form.cleaned_data['category'].category_id
         return redirect('create-rfp', category=selected_category)
         
+
+from django.http import JsonResponse
+from django.views.generic import View
+from django_datatables_view.base_datatable_view import BaseDatatableView
+from users.models import Category  # Replace with your actual model import
+from django.db.models import Q
+class CategoryJson(BaseDatatableView):
+    model = Category  # Replace with your actual model
+
+    # Define the columns for DataTables
+    columns = ['category_id', 'c_name', 'c_status', 'c_actions']
+
+    def filter_queryset(self, qs):
+        # Filtering logic here based on DataTables parameters
+        search = self.request.GET.get('search[value]', '')
+        name_filter = self.request.GET.get('columns[1][search][value]', '')  # Assuming 'c_name' is the second column (index 1)
+        status_filter = self.request.GET.get('columns[2][search][value]', '') 
+        if search:
+            # Apply overall search
+            qs = qs.filter(Q(c_name__icontains=search) | Q(c_status__icontains=search))  # Adjust the fields as needed
+
+        if name_filter:
+            # Apply column-wise search to 'c_name' column
+            qs = qs.filter(c_name__icontains=name_filter)
+
+        if status_filter:
+            # Apply column-wise search to 'c_name' column
+            qs = qs.filter(c_status__icontains=status_filter)
+
+        return qs
+
+    def get_initial_queryset(self):
+        # Return all objects
+        return Category.objects.all()
+
+    def render_column(self, row, column):
+    # Handle custom columns such as "c_actions" for Action column
+        if column == 'category_id':
+             return row.category_id  # Use the actual primary key field name
+        elif column == 'c_status':
+             status_class = 'status-green' if row.c_status == 'active' else 'status-red'
+             return f'<div class="status-box"><div class="status-cell {status_class}">{row.c_status}</div></div>'
+        elif column == 'c_actions':
+        # Implement the logic for rendering the "Action" column here
+        # Implement the logic for rendering the "Action" column here
+             if row.c_status == "active":
+                 return f'<a href="{reverse("deactivate", args=[row.category_id])}" class="action-link reject-link red-link"><I><strong>Deactivate</strong></I></a>'
+             else:
+                 return f'<a href="{reverse("activate", args=[row.category_id])}" class="action-link approve-link green link"><I><strong>Activate</strong></I></a>'
+        return super().render_column(row, column)
+

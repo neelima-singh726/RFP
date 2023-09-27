@@ -1,15 +1,29 @@
+<!-- category.html -->
 {% extends "baseAdmin.html" %}
-
-{% block title %}Catgories{% endblock %}
-
+{% block title %}Categories{% endblock %}
 {% block section2 %}
 <div>
     <h3>Category</h3>
-  </div>
-  <div class="bs-example">
-    <a href="{% url 'create-category' %}" class= "btn btn-success add-rfp-button" >+Add Category</a>
+    <div class="status-filter">
+        &nbsp; &nbsp;
+        <select id="status-filter">
+            <option value="">Status</option>
+            {% for status in status_values %}
+                <option value="{{ status }}">{{ status }} </option>
+            {% endfor %}
+        </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <select id="name-filter">
+            <option value="">Name</option>
+            {% for name in cname_values %}
+                <option value="{{ name }}">{{ name }} </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<div class="bs-example">
+    <a href="{% url 'create-category' %}" class="btn btn-success add-rfp-button">+Add Category</a>
     <br>
-    <table id="categoryTable" class="display">
+    <table id="categoryTable" class="display" data-server-side-url="{% url 'server-side-category' %}">
         <thead>
             <tr>
                 <th>Sr no.</th>
@@ -21,7 +35,7 @@
         <tbody>
             {% for cat in category %}
             <tr>
-                <td>{{ forloop.counter }}</td>
+                <td>{{ forloop.counter }}</td>  <!-- Retained logic for Sr no -->
                 <td>{{ cat.c_name }}</td>
                 <td>
                     <div class="status-box">
@@ -48,11 +62,10 @@
                 <th data-column-index="3"></th>
             </tr>
         </tfoot>
-        
     </table>
-    
+</div>
 {% endblock %}
-{%block script%}
+{% block script %}
 <script>
     $(document).ready(function() {
         var table = $('#categoryTable').DataTable({
@@ -62,18 +75,28 @@
             "order": [],  // Initial sorting order (empty to disable initial sorting)
             "columnDefs": [  // Enable sorting on specific columns
                 { "orderable": false, "targets": [0, 3] }  // Disable sorting on columns 0 and 3
-            ]
+            ],
+            "serverSide": true,  // Enable server-side processing
+            "ajax": {
+                "url": $('#categoryTable').data('server-side-url'),
+                "type": "GET",
+                "data": function(d) {
+                    // Add additional parameters here if needed
+                    d.status = $('#status-filter').val();
+                    d.name = $('#name-filter').val();
+                }
+            }
         });
-    
+
         // Apply the search functionality to the footer inputs
         $('#categoryTable tfoot th input').on('keyup change', function() {
             var index = $(this).parent().index();  // Get the column index from the table cell
             table.column(index).search(this.value).draw();
         });
+        // Force a DataTable redraw after the page is fully loaded
+    $(window).on('load', function() {
+        table.ajax.reload();
     });
-    
+    });
 </script>
-{%endblock%}
-
-
-
+{% endblock %}

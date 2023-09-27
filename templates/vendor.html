@@ -7,6 +7,29 @@
 <div>
     <h3>Vendors List</h3>
 </div>
+<div class="vendor-filter">
+    &nbsp; &nbsp;
+    <select id="name-filter">
+        <option value="">First Name</option>
+        {% for name in fname_values %}
+            <option value="{{ name }}">{{ name }} </option>
+        {% endfor %}
+    </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <select id="lname-filter">
+        <option value="">Last Name</option>
+        {% for name in lname_values %}
+            <option value="{{ name }}">{{ name }} </option>
+        {% endfor %}
+    </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <select id="email-filter">
+        <option value="">Email</option>
+        {% for e in email %}
+            <option value="{{ e }}">{{ e }} </option>
+        {% endfor %}
+    </select>
+   
+</div>
+
 <div class="bs-example">
     <table id="rfptable" class="display">
         <thead>

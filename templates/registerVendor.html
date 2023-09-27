@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration Form</title>
-    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <!-- Include Select2 CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
@@ -27,8 +29,8 @@
             background-color: #fff;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 80px;
-            max-width: 400px;
+            padding: 70px;
+            width: 600px;
             margin: 0 auto;
             margin-top: 20px;
         }
@@ -89,9 +91,22 @@
         {% endfor %}
     </div>
 {% endif %}
-
+{% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Error!</strong> Please correct the following errors:
+        <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     <div class="container">
+        
         <h2>Registration</h2>
+
         <form method="post">
             {% csrf_token %}
             
@@ -139,6 +154,11 @@
             </div>
 
             <div class="form-group">
+                <label for="{{ form.pan_no.id_for_label }}">PAN Number:</label>
+                {{ form.pan_no }}
+            </div>
+
+            <div class="form-group">
                 <label for="{{ form.phone_no.id_for_label }}">Phone Number:</label>
                 {{ form.phone_no }}
             </div>
@@ -173,12 +193,6 @@
             <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
                     <p>Register as Vendor <a href="{% url 'register-vendor' %}">Register</a></p>
                     <p>Forgot Password <a href="{% url 'forgot-password' %}">Forgot Password</a></p>
-                    {% if form.errors %}
-<div class="alert alert-danger">
-    <strong>Error:</strong>
-    {{ form.errors }}
-</div>
-{% endif %}
         </form>
         
     </div>

@@ -9,6 +9,16 @@
 {% block section2 %}
 <div>
     <h3>RFP List</h3>
+    <div class="rfpQuotes-filter">
+        &nbsp; &nbsp;
+        <select id="name-filter">
+            <option value="">Item Name</option>
+            {% for rfp in rfp_values %}
+                <option value="{{ rfp }}">{{ rfp }} </option>
+            {% endfor %}
+        </select>
+    </div>
+    <br>
 </div>
 <div class="bs-example">
     <br>

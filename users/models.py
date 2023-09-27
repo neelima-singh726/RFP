@@ -33,6 +33,8 @@ class User(AbstractUser):
     )
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField( max_length=150, blank=True)
+    email = models.EmailField(unique=True) 
+    reset = models.BooleanField(default=False)
 
 class Vendor(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
@@ -64,6 +66,7 @@ class Admin(models.Model):
     class Meta:
         ordering = ['-created_date']
 
+from django.db.models import CheckConstraint, Q
 
 class RFPList(models.Model):
     id = models.AutoField(primary_key=True)
@@ -84,6 +87,12 @@ class RFPList(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     class Meta:
         ordering = ['-created_date']
+        constraints = [
+            CheckConstraint(
+                check=~Q(last_date__lt=timezone.now().date()),
+                name="last_date_not_in_past"
+            ),
+        ]
 
 
 

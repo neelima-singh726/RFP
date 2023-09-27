@@ -37,6 +37,7 @@ urlpatterns = [
     path('request_quote/<int:id>/<int:quotes_id>/', views.request_quote, name='request_quote'),
     path('apply-for-quote-again/<int:quotes_id>/<int:rfp_id>/', views.UpdateRFpForQuoteView.as_view(), name='apply-for-quote-again'),
     path('select_category/', views.CategorySelectionView.as_view(), name='select_category'),
+    path('categories/server-side-category/', views.CategoryJson.as_view(), name='server-side-category'),
 
 
 

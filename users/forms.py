@@ -1,4 +1,5 @@
-from datetime import timezone
+from django.utils import timezone
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 import requests
@@ -29,18 +30,18 @@ class RegisterForm(UserCreationForm):
             user.save()
 
         return user
-
-
-
-
-
-
-
-
+from django.core.validators import RegexValidator
+import re
 class RegisterFormVendor(UserCreationForm):
     No_of_emp = forms.IntegerField(required=True)
-    gst_no = forms.CharField(max_length=100,required=True)
-    phone_no = forms.CharField(max_length=12,required=True)
+    pan_no = forms.CharField(max_length=10, required=True)
+
+    # GST Number Field
+    gst_no = forms.CharField(max_length=15, required=True)
+
+    # Phone Number Field
+    phone_no = forms.CharField(max_length=10, required=True)
+
     revenue = forms.CharField(max_length=255,required=True)
     category = forms.ModelMultipleChoiceField(
         queryset=Category.objects.filter(c_status='active'),  # Filter for active categories
@@ -52,9 +53,36 @@ class RegisterFormVendor(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'revenue', 'No_of_emp', 'gst_no', 'phone_no', 'category', 'country', 'state']
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'revenue', 'No_of_emp', 'gst_no', 'pan_no','phone_no', 'category', 'country', 'state']
     
-    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+         # PAN Number Validation
+        pan_no = cleaned_data.get('pan_no')
+        if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$', pan_no):
+            raise forms.ValidationError("Enter a valid PAN number.", code="invalid_pan")
+
+        # GST Number Validation
+        gst_no = cleaned_data.get('gst_no')
+        if not re.match(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$', gst_no):
+            raise forms.ValidationError("Enter a valid GST number.", code="invalid_gst")
+
+        # Phone Number Validation
+        phone_no = cleaned_data.get('phone_no')
+        if not re.match(r'^[0-9]{10}$', phone_no):
+            raise forms.ValidationError("Phone number must be exactly 10 digits.", code="invalid_phone")
+        
+        existing_vendor_with_pan = Vendor.objects.filter(pan_no=pan_no).first()
+        if existing_vendor_with_pan:
+            raise forms.ValidationError("This PAN number is already associated with another user.", code="duplicate_pan")
+
+        # Check uniqueness of GST number
+        existing_vendor_with_gst = Vendor.objects.filter(gst_no=gst_no).first()
+        if existing_vendor_with_gst:
+            raise forms.ValidationError("This GST number is already associated with another user.", code="duplicate_gst")
+
+        return cleaned_data
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -112,6 +140,7 @@ class RegisterFormVendor(UserCreationForm):
             revenue=self.cleaned_data['revenue'],
             No_of_emp=self.cleaned_data['No_of_emp'],
             gst_no=self.cleaned_data['gst_no'],
+            pan_no = self.cleaned_data['pan_no'],
             phone_no=self.cleaned_data['phone_no'],
             country=self.cleaned_data['country'],  # Set the selected country
             state=self.cleaned_data['state'],
@@ -137,6 +166,17 @@ class RfpListForm(forms.ModelForm):
     class Meta:
         model = RFPList
         fields = ['rfp_title', 'item_desc', 'last_date', 'min_amount', 'max_amount', 'vendors']
+
+    def clean_last_date(self):
+        last_date = self.cleaned_data.get('last_date')
+        current_date = timezone.now().date()  # Get the current date
+
+        if last_date < current_date:
+            raise forms.ValidationError("Last date cannot be in the past.")
+
+        return last_date
+    
+    
 
 class CategorySelectionForm(forms.Form):
     category = forms.ModelChoiceField(
